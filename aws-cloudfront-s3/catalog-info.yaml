@@ -61,7 +61,6 @@ spec:
       action: github:repo:create
       input:
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        owner: "${{ parameters.projectOwner }}"
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
@@ -69,9 +68,7 @@ spec:
       name: Aplicar template (CloudFront + S3)
       action: fetch:template
       input:
-        # Os arquivos serão copiados para o diretório "cloudfront-s3/<repoName>/" no repositório destino.
         targetPath: cloudfront-s3/${{ parameters.repoName }}/
-        # O diretório base com os arquivos está em "templates" (relativo ao arquivo do template).
         url: ./templates
         values:
           repoName: ${{ parameters.repoName }}
@@ -84,7 +81,6 @@ spec:
       action: publish:github:pull-request
       input:
         allowedHosts: ['github.com']
-        # Formato: github.com?owner=OWNER&repo=REPO
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
         sourcePath: cloudfront-s3/
         targetPath: ./
