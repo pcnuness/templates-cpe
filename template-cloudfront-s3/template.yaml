@@ -1,0 +1,158 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cloudfront-s3-template
+  title: Provisionamento de CloudFront com S3
+  description: Cria repositório, provisiona bucket S3 e distribuição CloudFront via CloudFormation
+spec:
+  owner: "engineering"
+  type: service
+
+  parameters:
+    - title: Informações do Repositório
+      required:
+        - repoName
+        - projectOwner
+      properties:
+        repoName:
+          title: Nome do Repositório
+          type: string
+          description: Nome do repositório a ser criado no GitHub.
+        projectOwner:
+          title: Dono do Projeto
+          type: string
+          description: Dono do repositório GitHub.
+
+    - title: Configuração da Infraestrutura AWS
+      required:
+        - bucketName
+        - acmCertificateArn
+        - cloudFrontAlias
+      properties:
+        bucketName:
+          title: Nome do Bucket S3
+          type: string
+          description: Nome do bucket S3 onde os arquivos serão armazenados.
+          default: "meu-bucket-cloudfront"
+        acmCertificateArn:
+          title: ARN do Certificado SSL no ACM
+          type: string
+          description: ARN do certificado no ACM para o CloudFront.
+        cloudFrontAlias:
+          title: Domínio configurado no CloudFront
+          type: string
+          description: Domínio utilizado para acessar a distribuição CloudFront.
+
+  steps:
+    - id: create-repository
+      name: Criar Repositório
+      action: github:repo:create
+      input:
+        repo: ${{ parameters.repoName }}
+        owner: ${{ parameters.projectOwner }}
+        description: "Repositório para provisionamento de CloudFront com S3"
+        visibility: public
+        defaultBranch: main
+
+    - id: push-files
+      name: Adicionar Arquivos ao Repositório
+      action: github:repo:push
+      input:
+        repoUrl: "github.com/${{ parameters.projectOwner }}/${{ parameters.repoName }}"
+        branch: main
+        files:
+          - path: cloudformation/s3-cloudfront.yaml
+            content: |
+              AWSTemplateFormatVersion: '2010-09-09'
+              Description: "Provisionamento de CloudFront com S3"
+              Parameters:
+                BucketName:
+                  Type: String
+                  Default: "${{ parameters.bucketName }}"
+                  Description: "Nome do Bucket S3"
+                AcmCertificateArn:
+                  Type: String
+                  Default: "${{ parameters.acmCertificateArn }}"
+                  Description: "ARN do Certificado SSL no ACM"
+                CloudFrontAlias:
+                  Type: String
+                  Default: "${{ parameters.cloudFrontAlias }}"
+                  Description: "Domínio no CloudFront"
+
+              Resources:
+                S3Bucket:
+                  Type: AWS::S3::Bucket
+                  Properties:
+                    BucketName: !Ref BucketName
+              
+                CloudFrontDistribution:
+                  Type: AWS::CloudFront::Distribution
+                  Properties:
+                    DistributionConfig:
+                      Enabled: true
+                      Origins:
+                        - Id: S3Origin
+                          DomainName: !GetAtt S3Bucket.DomainName
+                          S3OriginConfig:
+                            OriginAccessIdentity: origin-access-identity/cloudfront/E27O3C5B2L8I0G
+                      DefaultCacheBehavior:
+                        TargetOriginId: S3Origin
+                        ViewerProtocolPolicy: redirect-to-https
+                        AllowedMethods:
+                          - GET
+                          - HEAD
+                        CachedMethods:
+                          - GET
+                          - HEAD
+                      ViewerCertificate:
+                        AcmCertificateArn: !Ref AcmCertificateArn
+                        SslSupportMethod: sni-only
+                      Aliases:
+                        - !Ref CloudFrontAlias
+              Outputs:
+                CloudFrontDistributionId:
+                  Value: !Ref CloudFrontDistribution
+                  Description: "ID da distribuição CloudFront provisionada"
+
+          - path: static/index.html
+            content: |
+              <!DOCTYPE html>
+              <html lang="pt-BR">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Teste CloudFront</title>
+              </head>
+              <body>
+                <h1>Teste CloudFront</h1>
+                <p>Este é um arquivo <strong>index.html</strong> de teste para verificação da distribuição CloudFront.</p>
+              </body>
+              </html>
+
+          - path: .gitlab-ci.yml
+            content: |
+              stages:
+                - deploy
+
+              deploy:
+                stage: deploy
+                script:
+                  - echo "Fazendo deploy do CloudFormation"
+                  - aws cloudformation deploy \
+                      --template-file cloudformation/s3-cloudfront.yaml \
+                      --stack-name ${{ parameters.repoName }}-cloudfront-stack \
+                      --parameter-overrides \
+                          BucketName=${{ parameters.bucketName }} \
+                          AcmCertificateArn=${{ parameters.acmCertificateArn }} \
+                          CloudFrontAlias=${{ parameters.cloudFrontAlias }} \
+                      --capabilities CAPABILITY_NAMED_IAM
+
+    - id: register-backstage
+      name: Registrar no Backstage
+      action: catalog:register
+      input:
+        repoContentsUrl: "https://github.com/${{ parameters.projectOwner }}/${{ parameters.repoName }}"
+        catalogInfoPath: "/catalog-info.yaml"
+
+  output:
+    text: "Repositório criado com sucesso em GitHub e pipeline configurada!"
