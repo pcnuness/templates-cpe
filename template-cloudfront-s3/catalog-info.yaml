@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ parameters.repoName }}
+  description: "Infraestrutura provisionada com S3 + CloudFront"
+  annotations:
+    github.com/project-slug: "pcnuness/${{ parameters.repoName }}"
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - aws
+    - cloudformation
+    - s3
+    - cloudfront
+    - ci-cd
+spec:
+  type: service
+  lifecycle: production
+  owner: ${{ parameters.projectOwner }}
