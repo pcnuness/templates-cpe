@@ -1,22 +1,22 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cloudfront-s3
-  title: Provisionamento de CloudFront com S3
-  description: Cria repositório, provisiona bucket S3 e distribuição CloudFront via CloudFormation
+  name: cloudfront-s3-gitlab
+  title: Provisionamento de CloudFront com S3 (GitLab)
+  description: Cria projeto no GitLab, provisiona bucket S3 e distribuição CloudFront via CloudFormation
 spec:
   owner: engineering
   type: service
   parameters:
-    - title: Dados do Repositório
-      required: [repoName, projectOwner]
+    - title: Dados do Projeto
+      required: [projectName, groupOwner]
       properties:
-        repoName:
-          title: Nome do Repositório
+        projectName:
+          title: Nome do Projeto
           type: string
           default: cloudfront-s3-repo
-        projectOwner:
-          title: Dono do Projeto
+        groupOwner:
+          title: Grupo ou Usuário (namespace)
           type: string
           default: pcnuness
     - title: Configuração da Infraestrutura AWS
@@ -43,42 +43,42 @@ spec:
           ui:field: RepoUrlPicker
           ui:options:
             allowedHosts:
-              - github.com
+              - gitlab.com
+            # Se quiser restringir o "owner" (namespace) que pode ser usado
             allowedOwners:
               - pcnuness
   steps:
-    # 1) Criar o repositório
-    - id: create-repository
-      name: Criar Repositório
-      action: github:repo:create
+    # 1) Criar o projeto no GitLab
+    - id: create-project
+      name: Criar Projeto
+      action: gitlab:project:create
       input:
-        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        description: "Repositório para provisionamento de CloudFront com S3"
+        # Formato: gitlab.com?owner=OWNER&repo=PROJECT
+        # (o "owner" é o namespace, e "repo" é o nome do projeto)
+        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
         visibility: public
-        defaultBranch: main
+        description: "Projeto para provisionamento de CloudFront com S3"
 
     # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
       name: Aplicar template (CloudFront + S3)
       action: fetch:template
       input:
-        # Joga tudo na raiz do workspace local (".")
         targetPath: "."
-        # Ajuste o caminho abaixo para onde ficam seus arquivos de template
         url: "./templates"
         values:
-          repoName: ${{ parameters.repoName }}
-          projectOwner: ${{ parameters.projectOwner }}
+          projectName: ${{ parameters.projectName }}
+          groupOwner: ${{ parameters.groupOwner }}
           bucketName: ${{ parameters.bucketName }}
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
 
-    # 3) Fazer o push inicial (commit) no repositório (branch main)
+    # 3) Fazer o push inicial (commit) no projeto (branch main)
     - id: push-initial
       name: Push Inicial
-      action: github:repo:push
+      action: gitlab:repo:push
       input:
-        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
         committerName: "Backstage Scaffolder"
@@ -86,26 +86,25 @@ spec:
         authorName: "Backstage Scaffolder"
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
-        # Agora o 'source' é ".", que é onde os arquivos foram baixados
         files:
           - source: "."
             target: "/"
 
-    # 4) Criar Pull Request (se desejar) a partir de outra branch
-    - id: create_pr
-      name: Criar Pull Request para CloudFront + S3
-      action: publish:github:pull-request
+    # 4) Criar Merge Request (opcional) a partir de outra branch
+    - id: create_mr
+      name: Criar Merge Request
+      action: publish:gitlab:merge-request
       input:
-        allowedHosts: ['github.com']
-        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        # Vamos pegar do "." também, pois os arquivos estão na raiz local
+        allowedHosts: ['gitlab.com']
+        # Formato: gitlab.com?owner=OWNER&repo=PROJECT
+        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
         sourcePath: "."
         targetPath: "./"
-        description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
-        title: "feat: ${{ parameters.repoName }} - provisionamento CloudFront + S3"
-        branchName: "feat-${{ parameters.repoName }}"
+        description: "Código para provisionar CloudFront e S3 para o projeto ${{ parameters.projectName }}"
+        title: "feat: ${{ parameters.projectName }} - provisionamento CloudFront + S3"
+        branchName: "feat-${{ parameters.projectName }}"
   output:
     links:
-      - title: Repositório CloudFront + S3
-        url: "${{ steps.create_pr.output.remoteUrl }}"
-        text: "Pull Request criado"
+      - title: Projeto GitLab
+        url: "${{ steps.create_mr.output.remoteUrl }}"
+        text: "Merge Request criado"
