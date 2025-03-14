@@ -61,13 +61,13 @@ spec:
           bucketName: ${{ parameters.bucketName }}
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
-
+        
     # 3) Fazer o push inicial (commit) no projeto (branch main)
     - id: push-initial
       name: Push Inicial
       action: publish:gitlab
       input:
-        repoUrl: ${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
+        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
         committerName: "Backstage Scaffolder"
