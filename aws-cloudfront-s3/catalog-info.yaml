@@ -48,14 +48,14 @@ spec:
               - pcnuness
   steps:
     # 1) Criar o repositório
-    #- id: create-repository
-    #  name: Criar Repositório
-    #  action: github:repo:create
-    #  input:
-    #    repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-    #    description: "Repositório para provisionamento de CloudFront com S3"
-    #    visibility: public
-    #    defaultBranch: main
+    - id: create-repository
+      name: Criar Repositório
+      action: github:repo:create
+      input:
+        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+        description: "Repositório para provisionamento de CloudFront com S3"
+        visibility: public
+        defaultBranch: main
 
     # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
@@ -72,21 +72,21 @@ spec:
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
 
     # 3) Fazer o push inicial (commit) no repositório (branch main)
-    #- id: push-initial
-    #  name: Push Inicial
-    #  action: github:repo:push
-    #  input:
-    #    repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-    #    branch: main
-    #    defaultBranch: main
-    #    committerName: "Backstage Scaffolder"
-    #    committerEmail: "scaffolder@mydomain.com"
-    #    authorName: "Backstage Scaffolder"
-    #    authorEmail: "scaffolder@mydomain.com"
-    #    commitMessage: "Initial commit from Scaffolder"
-    #    files:
-    #      - source: "cloudfront-s3/${{ parameters.repoName }}/"
-    #        target: "/"
+    - id: push-initial
+      name: Push Inicial
+      action: github:repo:push
+      input:
+        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+        branch: main
+        defaultBranch: main
+        committerName: "Backstage Scaffolder"
+        committerEmail: "scaffolder@mydomain.com"
+        authorName: "Backstage Scaffolder"
+        authorEmail: "scaffolder@mydomain.com"
+        commitMessage: "Initial commit from Scaffolder"
+        files:
+          - source: "cloudfront-s3/${{ parameters.repoName }}/"
+            target: "/"
 
     # 4) Criar Pull Request (se desejar) a partir de outra branch
     - id: create_pr
