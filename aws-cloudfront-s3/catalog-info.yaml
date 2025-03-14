@@ -71,22 +71,24 @@ spec:
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
 
-    # 3) Fazer o push inicial dos arquivos para o repositório (branch main)
+    # 3) Fazer o push inicial (commit) no repositório (branch main)
     - id: push-initial
       name: Push Inicial
       action: github:repo:push
       input:
         repoUrl: "github.com/${{ parameters.projectOwner }}/${{ parameters.repoName }}"
         branch: main
-        # Copiar arquivos gerados no passo anterior
+        defaultBranch: main
+        committerName: "Backstage Scaffolder"
+        committerEmail: "scaffolder@mydomain.com"
+        authorName: "Backstage Scaffolder"
+        authorEmail: "scaffolder@mydomain.com"
+        commitMessage: "Initial commit from Scaffolder"
         files:
-          - source: "cloudfront-s3/${{ parameters.repoName }}/" 
-            # source pode ser uma pasta ou um arquivo específico
-            # target é onde os arquivos vão no repositório
+          - source: "cloudfront-s3/${{ parameters.repoName }}/"
             target: "/"
 
-    # 4) Criar Pull Request (opcional) a partir de uma nova branch
-    #    Aqui você decide se quer abrir PR de 'feature' para 'main'.
+    # 4) Criar Pull Request (se desejar) a partir de outra branch
     - id: create_pr
       name: Criar Pull Request para CloudFront + S3
       action: publish:github:pull-request
@@ -98,7 +100,6 @@ spec:
         description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
         title: "feat: ${{ parameters.repoName }} - provisionamento CloudFront + S3"
         branchName: "feat-${{ parameters.repoName }}"
-
   output:
     links:
       - title: Repositório CloudFront + S3
