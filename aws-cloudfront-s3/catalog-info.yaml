@@ -1,16 +1,88 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cloudfront-s3
-  title: "Provisionamento de CloudFront com S3"
-  description: "Template para provisionar um bucket S3 e distribuição CloudFront na AWS via CloudFormation"
+  name: aws-cloudfront-s3
+  title: Provisionamento de AWS CloudFront com S3
+  description: Template para provisionar AWS CloudFront com S3 via CloudFormation.
+  tags: [aws, cloudformation, s3, cloudfront]
   annotations:
     github.com/project-slug: "pcnuness/templates-cpe"
-  tags:
-    - aws
-    - cloudformation
-    - s3
-    - cloudfront
 spec:
-  owner: "engineering"
+  owner: engineering
   type: service
+  parameters:
+    - title: Dados do Repositório
+      required: [repoName, projectOwner]
+      properties:
+        repoName:
+          title: Nome do Repositório
+          type: string
+          description: Nome do repositório a ser criado no GitHub.
+          default: cloudfront-s3-repo
+          pattern: '^[a-zA-Z0-9\-]*$'
+        projectOwner:
+          title: Dono do Projeto
+          type: string
+          description: Dono do repositório no GitHub.
+          default: pcnuness
+    - title: Configuração da Infraestrutura AWS
+      required: [bucketName, acmCertificateArn, cloudFrontAlias]
+      properties:
+        bucketName:
+          title: Nome do Bucket S3
+          type: string
+          description: Nome do bucket S3.
+          default: meu-bucket-cloudfront
+        acmCertificateArn:
+          title: ARN do Certificado SSL no ACM
+          type: string
+          description: ARN do certificado SSL no ACM.
+          default: arn:aws:acm:us-east-1:123456789012:certificate/abcde-12345
+        cloudFrontAlias:
+          title: Domínio do CloudFront
+          type: string
+          description: Domínio configurado para a distribuição CloudFront.
+          default: cloudfront.example.com
+    - title: Repositório da Infraestrutura
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Repository
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - pcnuness
+  steps:
+    - id: fetch-template
+      name: Aplicar template (CloudFront + S3)
+      action: fetch:template
+      input:
+        # Os arquivos serão copiados para o diretório "cloudfront-s3/<repoName>/" no repositório destino.
+        targetPath: cloudfront-s3/${{ parameters.repoName }}/
+        # O diretório base com os arquivos está dentro deste repositório, em "templates".
+        url: ./templates
+        values:
+          repoName: ${{ parameters.repoName }}
+          projectOwner: ${{ parameters.projectOwner }}
+          bucketName: ${{ parameters.bucketName }}
+          acmCertificateArn: ${{ parameters.acmCertificateArn }}
+          cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
+    - id: create_pr
+      name: Criar PR para CloudFront + S3
+      action: publish:github:pull-request
+      input:
+        allowedHosts: ['github.com']
+        repoUrl: ${{ parameters.repoUrl }}
+        sourcePath: cloudfront-s3/
+        targetPath: ./
+        description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
+        title: "feat: ${{ parameters.repoName }} - provisionamento CloudFront + S3"
+        branchName: "feat-${{ parameters.repoName }}"
+  output:
+    links:
+      - title: Repositório CloudFront + S3
+        url: "${{ steps.create_pr.output.remoteUrl }}"
+        text: "Pull Request criado"
