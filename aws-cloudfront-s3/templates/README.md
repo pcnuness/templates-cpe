@@ -3,7 +3,7 @@
 Este repositório foi criado pelo Backstage Scaffolder para provisionar:
 - **Nome do Bucket**: {{ values.bucketName }}
 - **ARN do Certificado ACM**: {{ values.acmCertificateArn }}
-- **Domínio CloudFront**: {{ values.cloudFrontAlias }}
+- **Domínio CloudFront**: ${{values.cloudFrontAlias | dump}} {{ values.cloudFrontAlias }}
 
 ## Detalhes do Repositório
 - **Nome do repositório**: {{ values.repoName }}
