@@ -62,7 +62,6 @@ spec:
       name: Aplicar template (CloudFront + S3)
       action: fetch:template
       input:
-        templater: nunjucks
         # Joga tudo na raiz do workspace local (".")
         targetPath: "."
         # Ajuste o caminho abaixo para onde ficam seus arquivos de template
