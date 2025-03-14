@@ -1,11 +1,9 @@
-apiVersion: backstage.io/v1alpha1
+apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cloudfront-s3  # Nome fixo válido para evitar erro
+  name: cloudfront-s3
   title: "Provisionamento de CloudFront com S3"
-  description: "Template para provisionar um bucket S3 e CloudFront na AWS via CloudFormation"
-  annotations:
-    github.com/project-slug: "pcnuness/templates-cpe"
+  description: "Template para provisionar um bucket S3 e distribuição CloudFront na AWS via CloudFormation"
   tags:
     - aws
     - cloudformation

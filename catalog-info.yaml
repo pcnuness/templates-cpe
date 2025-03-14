@@ -4,6 +4,6 @@ metadata:
   name: templates-cpe
   description: "Repositório contendo templates para provisionamento de infraestrutura na AWS"
 spec:
-  type: url
+  type: template
   targets:
     - https://github.com/pcnuness/templates-cpe/blob/main/template-cloudfront-s3/catalog-info.yaml
