@@ -1,0 +1,15 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Fazendo deploy do CloudFormation"
+    - aws cloudformation deploy \
+        --template-file cloudformation/s3-cloudfront.yaml \
+        --stack-name "{{ repoName }}-cloudfront-stack" \
+        --parameter-overrides \
+            BucketName={{ bucketName }} \
+            AcmCertificateArn={{ acmCertificateArn }} \
+            CloudFrontAlias={{ cloudFrontAlias }} \
+        --capabilities CAPABILITY_NAMED_IAM
