@@ -18,7 +18,7 @@ spec:
         groupOwner:
           title: Grupo ou Usuário (namespace)
           type: string
-          default: pcnuness
+          default: pcnunes
     - title: Configuração da Infraestrutura AWS
       required: [bucketName, acmCertificateArn, cloudFrontAlias]
       properties:
@@ -46,7 +46,7 @@ spec:
               - gitlab.com
             # Se quiser restringir o "owner" (namespace) que pode ser usado
             allowedOwners:
-              - pcnuness
+              - pcnunes
   steps:
     # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
