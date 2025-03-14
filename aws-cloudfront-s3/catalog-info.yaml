@@ -48,17 +48,6 @@ spec:
             allowedOwners:
               - pcnuness
   steps:
-    # 1) Criar o projeto no GitLab
-    - id: create-project
-      name: Criar Projeto
-      action: gitlab:project:create
-      input:
-        # Formato: gitlab.com?owner=OWNER&repo=PROJECT
-        # (o "owner" é o namespace, e "repo" é o nome do projeto)
-        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
-        visibility: public
-        description: "Projeto para provisionamento de CloudFront com S3"
-
     # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
       name: Aplicar template (CloudFront + S3)
@@ -76,9 +65,9 @@ spec:
     # 3) Fazer o push inicial (commit) no projeto (branch main)
     - id: push-initial
       name: Push Inicial
-      action: gitlab:repo:push
+      action: publish:gitlab
       input:
-        repoUrl: "gitlab.com?owner=${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
+        repoUrl: ${{ parameters.groupOwner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
         committerName: "Backstage Scaffolder"
