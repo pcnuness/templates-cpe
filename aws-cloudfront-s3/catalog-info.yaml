@@ -47,24 +47,24 @@ spec:
             allowedOwners:
               - pcnuness
   steps:
-    # 1) Tenta criar o repositório. Se ele já existir, este passo falha, mas não interrompe o pipeline.
+    # 1) Criar o repositório
     - id: create-repository
       name: Criar Repositório
       action: github:repo:create
-      continueOnError: true
       input:
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
 
-    # 2) Aplicar o template apenas se o repositório foi criado com sucesso
+    # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
       name: Aplicar template (CloudFront + S3)
-      if: '{{ steps.create-repository.status == "completed" }}'
       action: fetch:template
       input:
+        # Joga tudo na raiz do workspace local (".")
         targetPath: "."
+        # Ajuste o caminho abaixo para onde ficam seus arquivos de template
         url: "./templates"
         values:
           repoName: ${{ parameters.repoName }}
@@ -73,10 +73,9 @@ spec:
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
 
-    # 3) Push inicial: executa somente se o passo anterior (fetch-template) foi concluído
+    # 3) Fazer o push inicial (commit) no repositório (branch main)
     - id: push-initial
       name: Push Inicial
-      if: '{{ steps.fetch-template.status == "completed" }}'
       action: github:repo:push
       input:
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
@@ -87,18 +86,19 @@ spec:
         authorName: "Backstage Scaffolder"
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
+        # Agora o 'source' é ".", que é onde os arquivos foram baixados
         files:
           - source: "."
             target: "/"
 
-    # 4) Criar Pull Request somente se o push inicial foi bem-sucedido
+    # 4) Criar Pull Request (se desejar) a partir de outra branch
     - id: create_pr
       name: Criar Pull Request para CloudFront + S3
-      if: '{{ steps.push-initial.status == "completed" }}'
       action: publish:github:pull-request
       input:
         allowedHosts: ['github.com']
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+        # Vamos pegar do "." também, pois os arquivos estão na raiz local
         sourcePath: "."
         targetPath: "./"
         description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
