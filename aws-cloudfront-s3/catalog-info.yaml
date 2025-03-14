@@ -47,22 +47,18 @@ spec:
             allowedOwners:
               - pcnuness
   steps:
-    #
-    # 1) Tenta criar o repositório
-    #
+    # 1) Tenta criar o repositório. Se ele já existir, este passo falha, mas não interrompe o pipeline.
     - id: create-repository
       name: Criar Repositório
       action: github:repo:create
-      continueOnError: true  # <--- Se falhar, não derruba todo o pipeline
+      continueOnError: true
       input:
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
 
-    #
-    # 2) Copiar arquivos base localmente, MAS só se o passo anterior tiver sido concluído com sucesso
-    #
+    # 2) Aplicar o template apenas se o repositório foi criado com sucesso
     - id: fetch-template
       name: Aplicar template (CloudFront + S3)
       if: '{{ steps.create-repository.status == "completed" }}'
@@ -77,9 +73,7 @@ spec:
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
 
-    #
-    # 3) Push inicial, só se o passo anterior tiver rodado
-    #
+    # 3) Push inicial: executa somente se o passo anterior (fetch-template) foi concluído
     - id: push-initial
       name: Push Inicial
       if: '{{ steps.fetch-template.status == "completed" }}'
@@ -97,9 +91,7 @@ spec:
           - source: "."
             target: "/"
 
-    #
-    # 4) Criar Pull Request (opcional), só se o push inicial tiver rodado
-    #
+    # 4) Criar Pull Request somente se o push inicial foi bem-sucedido
     - id: create_pr
       name: Criar Pull Request para CloudFront + S3
       if: '{{ steps.push-initial.status == "completed" }}'
