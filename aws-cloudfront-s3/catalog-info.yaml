@@ -1,9 +1,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws-cloudfront-s3
-  title: Provisionamento de AWS CloudFront com S3
-  description: Template para provisionar AWS CloudFront com S3 via CloudFormation.
+  name: cloudfront-s3
+  title: Provisionamento de CloudFront com S3
+  description: Cria repositório, provisiona bucket S3 e distribuição CloudFront via CloudFormation
   tags: [aws, cloudformation, s3, cloudfront]
   annotations:
     github.com/project-slug: "pcnuness/templates-cpe"
@@ -56,12 +56,12 @@ spec:
             allowedOwners:
               - pcnuness
   steps:
-    - id: create-repo
+    - id: create-repository
       name: Criar Repositório
       action: github:repo:create
       input:
-        repo: ${{ parameters.repoName }}
-        owner: ${{ parameters.projectOwner }}
+        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+        owner: "${{ parameters.projectOwner }}"
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
@@ -71,7 +71,7 @@ spec:
       input:
         # Os arquivos serão copiados para o diretório "cloudfront-s3/<repoName>/" no repositório destino.
         targetPath: cloudfront-s3/${{ parameters.repoName }}/
-        # O diretório base com os arquivos está dentro deste repositório, em "templates".
+        # O diretório base com os arquivos está em "templates" (relativo ao arquivo do template).
         url: ./templates
         values:
           repoName: ${{ parameters.repoName }}
@@ -80,11 +80,12 @@ spec:
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
     - id: create_pr
-      name: Criar PR para CloudFront + S3
+      name: Criar Pull Request para CloudFront + S3
       action: publish:github:pull-request
       input:
         allowedHosts: ['github.com']
-        repoUrl: ${{ parameters.repoUrl }}
+        # Formato: github.com?owner=OWNER&repo=REPO
+        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
         sourcePath: cloudfront-s3/
         targetPath: ./
         description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
