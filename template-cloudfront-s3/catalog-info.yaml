@@ -4,6 +4,8 @@ metadata:
   name: cloudfront-s3
   title: "Provisionamento de CloudFront com S3"
   description: "Template para provisionar um bucket S3 e distribuição CloudFront na AWS via CloudFormation"
+  annotations:
+    github.com/project-slug: "pcnuness/templates-cpe"
   tags:
     - aws
     - cloudformation
