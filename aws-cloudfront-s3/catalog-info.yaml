@@ -4,9 +4,6 @@ metadata:
   name: cloudfront-s3
   title: Provisionamento de CloudFront com S3
   description: Cria repositório, provisiona bucket S3 e distribuição CloudFront via CloudFormation
-  tags: [aws, cloudformation, s3, cloudfront]
-  annotations:
-    github.com/project-slug: "pcnuness/templates-cpe"
 spec:
   owner: engineering
   type: service
@@ -17,13 +14,10 @@ spec:
         repoName:
           title: Nome do Repositório
           type: string
-          description: Nome do repositório a ser criado no GitHub.
           default: cloudfront-s3-repo
-          pattern: '^[a-zA-Z0-9\-]*$'
         projectOwner:
           title: Dono do Projeto
           type: string
-          description: Dono do repositório no GitHub.
           default: pcnuness
     - title: Configuração da Infraestrutura AWS
       required: [bucketName, acmCertificateArn, cloudFrontAlias]
@@ -31,17 +25,14 @@ spec:
         bucketName:
           title: Nome do Bucket S3
           type: string
-          description: Nome do bucket S3.
           default: meu-bucket-cloudfront
         acmCertificateArn:
           title: ARN do Certificado SSL no ACM
           type: string
-          description: ARN do certificado SSL no ACM.
           default: arn:aws:acm:us-east-1:123456789012:certificate/abcde-12345
         cloudFrontAlias:
           title: Domínio do CloudFront
           type: string
-          description: Domínio configurado para a distribuição CloudFront.
           default: cloudfront.example.com
     - title: Repositório da Infraestrutura
       required: [repoUrl]
@@ -56,6 +47,7 @@ spec:
             allowedOwners:
               - pcnuness
   steps:
+    # 1) Criar o repositório
     - id: create-repository
       name: Criar Repositório
       action: github:repo:create
@@ -64,29 +56,49 @@ spec:
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
+
+    # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
       name: Aplicar template (CloudFront + S3)
       action: fetch:template
       input:
-        targetPath: cloudfront-s3/${{ parameters.repoName }}/
-        url: ./templates
+        targetPath: "cloudfront-s3/${{ parameters.repoName }}/"
+        url: "./templates"
         values:
           repoName: ${{ parameters.repoName }}
           projectOwner: ${{ parameters.projectOwner }}
           bucketName: ${{ parameters.bucketName }}
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
+
+    # 3) Fazer o push inicial dos arquivos para o repositório (branch main)
+    - id: push-initial
+      name: Push Inicial
+      action: github:repo:push
+      input:
+        repoUrl: "github.com/${{ parameters.projectOwner }}/${{ parameters.repoName }}"
+        branch: main
+        # Copiar arquivos gerados no passo anterior
+        files:
+          - source: "cloudfront-s3/${{ parameters.repoName }}/" 
+            # source pode ser uma pasta ou um arquivo específico
+            # target é onde os arquivos vão no repositório
+            target: "/"
+
+    # 4) Criar Pull Request (opcional) a partir de uma nova branch
+    #    Aqui você decide se quer abrir PR de 'feature' para 'main'.
     - id: create_pr
       name: Criar Pull Request para CloudFront + S3
       action: publish:github:pull-request
       input:
         allowedHosts: ['github.com']
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        sourcePath: cloudfront-s3/
-        targetPath: ./
+        sourcePath: "cloudfront-s3/"
+        targetPath: "./"
         description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
         title: "feat: ${{ parameters.repoName }} - provisionamento CloudFront + S3"
         branchName: "feat-${{ parameters.repoName }}"
+
   output:
     links:
       - title: Repositório CloudFront + S3
