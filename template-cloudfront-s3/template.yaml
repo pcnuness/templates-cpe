@@ -4,21 +4,16 @@ metadata:
   name: cloudfront-s3-template
   title: Provisionamento de CloudFront com S3
   description: Cria repositório, provisiona bucket S3 e distribuição CloudFront via CloudFormation
+  annotations:
+    github.com/project-slug: "pcnuness/templates-cpe"
+  tags:
+    - aws
+    - cloudformation
+    - s3
+    - cloudfront
 spec:
   owner: "engineering"
   type: service
-  steps:
-    - id: fetch-base-files
-      name: "Clonar arquivos base"
-      action: fetch:plain
-      input:
-        url: "./files"
-    - id: execute-scaffold
-      name: "Executar scaffold"
-      action: cookiecutter
-      input:
-        templatePath: "./files"
-
   parameters:
     - title: Informações do Repositório
       required:
@@ -33,7 +28,6 @@ spec:
           title: Dono do Projeto
           type: string
           description: Dono do repositório GitHub.
-
     - title: Configuração da Infraestrutura AWS
       required:
         - bucketName
@@ -53,7 +47,6 @@ spec:
           title: Domínio configurado no CloudFront
           type: string
           description: Domínio utilizado para acessar a distribuição CloudFront.
-
   steps:
     - id: create-repository
       name: Criar Repositório
@@ -64,7 +57,6 @@ spec:
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
-
     - id: push-files
       name: Adicionar Arquivos ao Repositório
       action: github:repo:push
@@ -89,13 +81,11 @@ spec:
                   Type: String
                   Default: "${{ parameters.cloudFrontAlias }}"
                   Description: "Domínio no CloudFront"
-
               Resources:
                 S3Bucket:
                   Type: AWS::S3::Bucket
                   Properties:
                     BucketName: !Ref BucketName
-              
                 CloudFrontDistribution:
                   Type: AWS::CloudFront::Distribution
                   Properties:
@@ -124,7 +114,6 @@ spec:
                 CloudFrontDistributionId:
                   Value: !Ref CloudFrontDistribution
                   Description: "ID da distribuição CloudFront provisionada"
-
           - path: static/index.html
             content: |
               <!DOCTYPE html>
@@ -139,12 +128,10 @@ spec:
                 <p>Este é um arquivo <strong>index.html</strong> de teste para verificação da distribuição CloudFront.</p>
               </body>
               </html>
-
           - path: .gitlab-ci.yml
             content: |
               stages:
                 - deploy
-
               deploy:
                 stage: deploy
                 script:
@@ -157,13 +144,11 @@ spec:
                           AcmCertificateArn=${{ parameters.acmCertificateArn }} \
                           CloudFrontAlias=${{ parameters.cloudFrontAlias }} \
                       --capabilities CAPABILITY_NAMED_IAM
-
     - id: register-backstage
       name: Registrar no Backstage
       action: catalog:register
       input:
         repoContentsUrl: "https://github.com/${{ parameters.projectOwner }}/${{ parameters.repoName }}"
         catalogInfoPath: "/catalog-info.yaml"
-
   output:
     text: "Repositório criado com sucesso em GitHub e pipeline configurada!"
