@@ -48,14 +48,14 @@ spec:
               - pcnuness
   steps:
     # 1) Criar o repositório
-    - id: create-repository
-      name: Criar Repositório
-      action: github:repo:create
-      input:
-        repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        description: "Repositório para provisionamento de CloudFront com S3"
-        visibility: public
-        defaultBranch: main
+    #- id: create-repository
+    #  name: Criar Repositório
+    #  action: github:repo:create
+    #  input:
+    #    repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
+    #    description: "Repositório para provisionamento de CloudFront com S3"
+    #    visibility: public
+    #    defaultBranch: main
 
     # 2) Copiar arquivos base para o workspace local
     - id: fetch-template
