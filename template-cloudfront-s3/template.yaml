@@ -52,8 +52,8 @@ spec:
       name: Criar Repositório
       action: github:repo:create
       input:
-        repo: ${{ parameters.repoName }}
-        owner: ${{ parameters.projectOwner }}
+        repo: "${{ parameters.repoName }}"
+        owner: "${{ parameters.projectOwner }}"
         description: "Repositório para provisionamento de CloudFront com S3"
         visibility: public
         defaultBranch: main
@@ -138,7 +138,7 @@ spec:
                   - echo "Fazendo deploy do CloudFormation"
                   - aws cloudformation deploy \
                       --template-file cloudformation/s3-cloudfront.yaml \
-                      --stack-name ${{ parameters.repoName }}-cloudfront-stack \
+                      --stack-name "${{ parameters.repoName }}-cloudfront-stack" \
                       --parameter-overrides \
                           BucketName=${{ parameters.bucketName }} \
                           AcmCertificateArn=${{ parameters.acmCertificateArn }} \
