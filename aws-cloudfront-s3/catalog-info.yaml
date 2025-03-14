@@ -62,7 +62,9 @@ spec:
       name: Aplicar template (CloudFront + S3)
       action: fetch:template
       input:
-        targetPath: "cloudfront-s3/${{ parameters.repoName }}/"
+        # Joga tudo na raiz do workspace local (".")
+        targetPath: "."
+        # Ajuste o caminho abaixo para onde ficam seus arquivos de template
         url: "./templates"
         values:
           repoName: ${{ parameters.repoName }}
@@ -84,8 +86,9 @@ spec:
         authorName: "Backstage Scaffolder"
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
+        # Agora o 'source' é ".", que é onde os arquivos foram baixados
         files:
-          - source: "cloudfront-s3/${{ parameters.repoName }}/"
+          - source: "."
             target: "/"
 
     # 4) Criar Pull Request (se desejar) a partir de outra branch
@@ -95,7 +98,8 @@ spec:
       input:
         allowedHosts: ['github.com']
         repoUrl: "github.com?owner=${{ parameters.projectOwner }}&repo=${{ parameters.repoName }}"
-        sourcePath: "cloudfront-s3/"
+        # Vamos pegar do "." também, pois os arquivos estão na raiz local
+        sourcePath: "."
         targetPath: "./"
         description: "Código para provisionar CloudFront e S3 para o repositório ${{ parameters.repoName }}"
         title: "feat: ${{ parameters.repoName }} - provisionamento CloudFront + S3"
