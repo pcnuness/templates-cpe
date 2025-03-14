@@ -7,6 +7,17 @@ metadata:
 spec:
   owner: "engineering"
   type: service
+  steps:
+    - id: fetch-base-files
+      name: "Clonar arquivos base"
+      action: fetch:plain
+      input:
+        url: "./files"
+    - id: execute-scaffold
+      name: "Executar scaffold"
+      action: cookiecutter
+      input:
+        templatePath: "./files"
 
   parameters:
     - title: Informações do Repositório
