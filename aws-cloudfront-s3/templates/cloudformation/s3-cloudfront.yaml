@@ -3,15 +3,15 @@ Description: "Provisionamento de CloudFront com S3"
 Parameters:
   BucketName:
     Type: String
-    Default: "${{ bucketName | dump}}"
+    Default: ${{ bucketName | dump}}
     Description: "Nome do Bucket S3"
   AcmCertificateArn:
     Type: String
-    Default: "${{ acmCertificateArn | dump}}"
+    Default: ${{ acmCertificateArn | dump}}
     Description: "ARN do Certificado SSL no ACM"
   CloudFrontAlias:
     Type: String
-    Default: "${{ cloudFrontAlias | dump}}"
+    Default: ${{ cloudFrontAlias | dump}}
     Description: "Domínio configurado para o CloudFront"
 Resources:
   S3Bucket:
