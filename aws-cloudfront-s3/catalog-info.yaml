@@ -70,6 +70,15 @@ spec:
           bucketName: ${{ parameters.bucketName }}
           acmCertificateArn: ${{ parameters.acmCertificateArn }}
           cloudFrontAlias: ${{ parameters.cloudFrontAlias }}
+    - id: create-repo
+      name: Criar Repositório
+      action: github:repo:create
+      input:
+        repo: ${{ parameters.repoName }}
+        owner: ${{ parameters.projectOwner }}
+        description: "Repositório para provisionamento de CloudFront com S3"
+        visibility: public
+        defaultBranch: main
     - id: create_pr
       name: Criar PR para CloudFront + S3
       action: publish:github:pull-request
