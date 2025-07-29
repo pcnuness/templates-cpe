@@ -25,30 +25,35 @@ spec:
           title: Organização ou Usuário GitHub
           type: string
           default: pcnuness
-
+          
   steps:
-    - id: step-base
-      name: Gerar Estrutura GitOps Completa
+    - id: fetch-template
+      name: Gerar estrutura GitOps com Addons
       action: fetch:template
       input:
-        url: ./gitops-cluster-repo/templates/cluster-management
-        targetPath: .
+        targetPath: "."
+        url: "./templates"
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
+          AddonsAWS: ${{ parameters.AddonsAWS }}
+          AddonsOSS: ${{ parameters.AddonsOSS }}
 
-    - id: step-push
-      name: Commit Inicial no GitHub
+    - id: push-initial
+      name: Push Inicial
       action: publish:github
       input:
         repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
-        commitMessage: "Initial commit com estrutura GitOps completa"
-        authorName: Backstage Scaffolder
-        authorEmail: scaffolder@domain.com
-        committerName: Backstage Scaffolder
-        committerEmail: scaffolder@domain.com
+        committerName: "Backstage Scaffolder"
+        committerEmail: "scaffolder@mydomain.com"
+        authorName: "Backstage Scaffolder"
+        authorEmail: "scaffolder@mydomain.com"
+        commitMessage: "Initial commit from Scaffolder"
+        files:
+          - source: "."
+            target: "/"
 
   output:
     links:
