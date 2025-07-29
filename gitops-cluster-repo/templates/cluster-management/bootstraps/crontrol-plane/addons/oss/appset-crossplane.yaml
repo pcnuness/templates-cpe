@@ -1,3 +1,4 @@
+{% if "crossplane" in parameters.addonsOSS %}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -79,3 +80,4 @@ spec:
           jqPathExpressions:
             - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
             - .spec.template.spec.initContainers[].env[].valueFrom.resourceFieldRef.divisor
+{% endif %}
