@@ -12,7 +12,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}
+    repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
     targetRevision: develop
     path: bootstraps/control-plane/addons/oss
     directory:
