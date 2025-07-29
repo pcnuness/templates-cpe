@@ -1,9 +1,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: gitops-cluster-repo
-  title: Repositório GitOps (AWS ALB + Ingress-nginx)
-  description: Cria um repositório GitOps com estrutura padrão de gerenciamento kubernetes
+  name: gitops-cluster-default
+  title: Repositório GitOps Default
+  description: Cria repositório GitOps com estrutura default de gerenciamento kubernetes
   tags:
     - gitops
     - argocd
@@ -20,7 +20,7 @@ spec:
         projectName:
           title: Nome do Repositório
           type: string
-          default: cluster-management
+          default: gitops-cluster
         owner:
           title: Organização ou Usuário GitHub
           type: string
