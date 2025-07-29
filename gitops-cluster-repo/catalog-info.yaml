@@ -2,36 +2,34 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: gitops-cluster-repo
-  title: Novo Repositório GitOps de Gerenciamento de Cluster
-  description: Cria um novo repositório GitOps com a estrutura padrão para gerenciamento de cluster por cliente, aplicação ou produto.
+  title: Novo Repositório GitOps com Addons
+  description: Cria um repositório GitOps com estrutura padrão de gerenciamento de cluster e opções de addons AWS e OSS.
   tags:
     - gitops
     - argocd
     - kubernetes
-    - backstage
     - aws
-    - github
+    - addons
 spec:
   owner: gitops-plataform
   type: gitops
-
   parameters:
-    - title: GitOps Repository Details
+    - title: Informações do Repositório
       required: [projectName, owner]
       properties:
         projectName:
-          title: Nome do Repositório GitOps
+          title: Nome do Repositório
           type: string
           default: cluster-management
         owner:
-          title: Organização ou Usuário no GitHub
+          title: Organização ou Usuário GitHub
           type: string
           default: pcnunes
 
-    - title: Configuração de Addons
+    - title: Seleção de Addons
       properties:
         addonsAWS:
-          title: Selecione Add-ons AWS
+          title: Add-ons AWS
           type: array
           items:
             type: string
@@ -41,7 +39,7 @@ spec:
               - ebs-csi-driver
           default: ["load-balancer-controller"]
         addonsOSS:
-          title: Selecione Add-ons OSS
+          title: Add-ons OSS
           type: array
           items:
             type: string
@@ -52,90 +50,52 @@ spec:
           default: ["crossplane"]
 
   steps:
-    - id: fetch-base
-      name: Gerar estrutura base GitOps
+    - id: step-base
+      name: Gerar Estrutura Base
       action: fetch:template
       input:
-        targetPath: "."
-        url: "./templates/base"
+        url: ./base
+        targetPath: .
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
 
-    # AWS Addons
-    - id: fetch-addon-aws-lb
-      name: Adicionar AWS Load Balancer Controller
-      if: ${{ parameters.addonsAWS && "load-balancer-controller" in parameters.addonsAWS }}
+    # Loop pelos Addons AWS selecionados
+    - id: step-aws
+      name: Gerar Addons AWS
+      if: ${{ parameters.addonsAWS && parameters.addonsAWS.length > 0 }}
       action: fetch:template
       input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
-        url: "./templates/addons/aws/load-balancer-controller"
-        values: {}
+        url: ./addons/aws
+        targetPath: .
+        values:
+          selectedAddons: ${{ parameters.addonsAWS }}
 
-    - id: fetch-addon-aws-extdns
-      name: Adicionar External DNS
-      if: ${{ parameters.addonsAWS && "external-dns" in parameters.addonsAWS }}
+    # Loop pelos Addons OSS selecionados
+    - id: step-oss
+      name: Gerar Addons OSS
+      if: ${{ parameters.addonsOSS && parameters.addonsOSS.length > 0 }}
       action: fetch:template
       input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
-        url: "./templates/addons/aws/external-dns"
-        values: {}
+        url: ./addons/oss
+        targetPath: .
+        values:
+          selectedAddons: ${{ parameters.addonsOSS }}
 
-    - id: fetch-addon-aws-ebs
-      name: Adicionar EBS CSI Driver
-      if: ${{ parameters.addonsAWS && "ebs-csi-driver" in parameters.addonsAWS }}
-      action: fetch:template
-      input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
-        url: "./templates/addons/aws/ebs-csi-driver"
-        values: {}
-
-    # OSS Addons
-    - id: fetch-addon-oss-crossplane
-      name: Adicionar Crossplane
-      if: ${{ parameters.addonsOSS && "crossplane" in parameters.addonsOSS }}
-      action: fetch:template
-      input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
-        url: "./templates/addons/oss/crossplane"
-        values: {}
-
-    - id: fetch-addon-oss-ingress
-      name: Adicionar Ingress NGINX
-      if: ${{ parameters.addonsOSS && "ingress-nginx" in parameters.addonsOSS }}
-      action: fetch:template
-      input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
-        url: "./templates/addons/oss/ingress-nginx"
-        values: {}
-
-    - id: fetch-addon-oss-argocd
-      name: Adicionar ArgoCD Ingress
-      if: ${{ parameters.addonsOSS && "argocd-ingress" in parameters.addonsOSS }}
-      action: fetch:template
-      input:
-        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
-        url: "./templates/addons/oss/argocd-ingress"
-        values: {}
-
-    - id: push-initial
+    - id: step-push
       name: Push Inicial
       action: publish:github
       input:
         repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
-        committerName: "Backstage Scaffolder"
-        committerEmail: "scaffolder@mydomain.com"
-        authorName: "Backstage Scaffolder"
-        authorEmail: "scaffolder@mydomain.com"
-        commitMessage: "Initial commit from Scaffolder"
-        files:
-          - source: "."
-            target: "/"
+        commitMessage: "Initial commit com estrutura GitOps e addons selecionados"
+        authorName: Backstage Scaffolder
+        authorEmail: scaffolder@domain.com
+        committerName: Backstage Scaffolder
+        committerEmail: scaffolder@domain.com
 
   output:
     links:
-      - title: Repositório no GitHub
+      - title: Repositório GitHub
         url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
-        text: "Acesse o repositório criado"
