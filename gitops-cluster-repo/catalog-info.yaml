@@ -24,7 +24,7 @@ spec:
         owner:
           title: Organização ou Usuário GitHub
           type: string
-          default: pcnunes
+          default: pcnuness
 
   steps:
     - id: step-base
