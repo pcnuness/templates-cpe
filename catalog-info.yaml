@@ -6,4 +6,4 @@ metadata:
 spec:
   type: url
   targets:
-    - "https://raw.githubusercontent.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
+    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
