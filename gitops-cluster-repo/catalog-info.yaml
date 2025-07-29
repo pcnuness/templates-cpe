@@ -35,8 +35,6 @@ spec:
             type: string
             enum:
               - load-balancer-controller
-              - external-dns
-              - ebs-csi-driver
           default: ["load-balancer-controller"]
         addonsOSS:
           title: Add-ons OSS
@@ -45,8 +43,6 @@ spec:
             type: string
             enum:
               - crossplane
-              - ingress-nginx
-              - argocd-ingress
           default: ["crossplane"]
 
   steps:
