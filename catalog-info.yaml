@@ -6,6 +6,6 @@ metadata:
 spec:
   type: url
   targets:
-    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
+    #- "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/aws-cloudfront-s3/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/aws-lambda/catalog-info.yaml"
