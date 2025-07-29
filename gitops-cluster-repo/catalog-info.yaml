@@ -1,0 +1,96 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: gitops-cluster-repo
+  title: Novo Repositório GitOps de Gerenciamento de Cluster
+  description: Cria um novo repositório GitOps com a estrutura padrão para gerenciamento de cluster por cliente, aplicação ou produto.
+  tags:
+    - gitops
+    - argocd
+    - kubernetes
+    - backstage
+    - aws
+    - github
+spec:
+  owner: gitops-plataform
+  type: gitops
+  parameters:
+    - title: GitOps Repository Details
+      required: [projectName]
+      properties:
+        projectName:
+          title: Nome do Repositório GitOps
+          type: string
+          default: cluster-management
+        owner:
+          title: Organização ou Usuário no GitHub
+          type: string
+          default: pcnunes
+    - title: Configuração de Addons
+      required: [AddonsAWS, AddonsOSS]
+      properties:
+        AddonsAWS:
+          title: Nome Addon AWS
+          type: string
+          default: ALB-controller
+        AddonsOSS:
+          title: Nome Addon OSS
+          type: string
+          default: crossplane
+    - title: Repositório da Infraestrutura
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Repository
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - pcnunes
+  steps:
+    - id: fetch-template
+      title: "feat: ${{ parameters.projectName }} - GitOps base com ${{ parameters.AddonsAWS }} + ${{ parameters.AddonsOSS }}"
+      description: "Provisiona estrutura GitOps base e AppSets para add-ons ${{ parameters.AddonsAWS }} e ${{ parameters.AddonsOSS }}"
+      action: fetch:template
+      input:
+        targetPath: "."
+        url: "./templates"
+        values:
+          projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.owner }}
+          AddonsAWS: ${{ parameters.AddonsAWS }}
+          AddonsOSS: ${{ parameters.AddonsOSS }}
+
+    - id: push-initial
+      name: Push Inicial
+      action: publish:github
+      input:
+        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
+        branch: main
+        defaultBranch: main
+        committerName: "Backstage Scaffolder"
+        committerEmail: "scaffolder@mydomain.com"
+        authorName: "Backstage Scaffolder"
+        authorEmail: "scaffolder@mydomain.com"
+        commitMessage: "Initial commit from Scaffolder"
+        files:
+          - source: "."
+            target: "/"
+
+    - id: create_pr
+      name: Criar Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
+        title: "feat: ${{ parameters.projectName }} - provisionamento CloudFront + S3"
+        branchName: "feat-${{ parameters.projectName }}"
+        description: "Código para provisionar CloudFront e S3 para o projeto ${{ parameters.projectName }}"
+        sourcePath: "."
+        targetPath: "./"
+  output:
+    links:
+      - title: Projeto GitHub
+        url: "${{ steps.create_pr.output.remoteUrl }}"
+        text: "Pull Request criado"

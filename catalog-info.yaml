@@ -2,9 +2,10 @@ apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: templates
-  description: "Repositório contendo templates para provisionamento de infraestrutura AWS"
+  description: "Repositório templates para recursos de infraestrutura DevOps"
 spec:
   type: url
   targets:
+    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/aws-cloudfront-s3/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/aws-lambda/catalog-info.yaml"
