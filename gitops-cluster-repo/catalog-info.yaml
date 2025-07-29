@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: gitops-cluster-repo
-  title: Novo Repositório GitOps Padrão
-  description: Cria um repositório GitOps com estrutura padrão de gerenciamento de cluster
+  title: Repositório GitOps (AWS ALB + Ingress-nginx)
+  description: Cria um repositório GitOps com estrutura padrão de gerenciamento kubernetes
   tags:
     - gitops
     - argocd
