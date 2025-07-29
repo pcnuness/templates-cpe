@@ -37,18 +37,6 @@ spec:
           title: Nome Addon OSS
           type: string
           default: crossplane
-    - title: Repositório da Infraestrutura
-      required: [repoUrl]
-      properties:
-        repoUrl:
-          title: Repository
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-            allowedOwners:
-              - pcnunes
   steps:
     - id: fetch-template
       title: "feat: ${{ parameters.projectName }} - GitOps base com ${{ parameters.AddonsAWS }} + ${{ parameters.AddonsOSS }}"
