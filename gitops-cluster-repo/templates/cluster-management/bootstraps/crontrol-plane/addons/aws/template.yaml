@@ -5,12 +5,22 @@ metadata:
   title: Adiciona Addons AWS selecionados
 spec:
   type: fragment
+  parameters:
+    - title: Addons selecionados
+      properties:
+        selectedAddons:
+          type: array
+          items:
+            type: string
   steps:
-    - id: generate-aws-addons
+    - id: generate-addons
       name: Gerar arquivos dos Addons AWS
-      action: generate:template
+      action: generate:files
       input:
-        path: .
-        outputPath: "."
-        values:
-          addons: ${{ parameters.selectedAddons }}
+        files:
+          {% raw %}
+          {% for addon in parameters.selectedAddons %}
+            - source: ./appset-{{ addon }}.yaml.njk
+              target: cluster-management/bootstraps/control-plane/addons/aws/appset-{{ addon }}.yaml
+          {% endfor %}
+          {% endraw %}

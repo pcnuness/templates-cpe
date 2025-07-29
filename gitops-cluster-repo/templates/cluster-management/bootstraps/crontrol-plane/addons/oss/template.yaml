@@ -2,15 +2,25 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: addons-oss
-  title: Adiciona Addons OSS selecionados
+  title: Adiciona Addons oss selecionados
 spec:
   type: fragment
+  parameters:
+    - title: Addons selecionados
+      properties:
+        selectedAddons:
+          type: array
+          items:
+            type: string
   steps:
-    - id: generate-oss-addons
+    - id: generate-addons
       name: Gerar arquivos dos Addons AWS
-      action: generate:template
+      action: generate:files
       input:
-        path: .
-        outputPath: "."
-        values:
-          addons: ${{ parameters.selectedAddons }}
+        files:
+          {% raw %}
+          {% for addon in parameters.selectedAddons %}
+            - source: ./appset-{{ addon }}.yaml.njk
+              target: cluster-management/bootstraps/control-plane/addons/oss/appset-{{ addon }}.yaml
+          {% endfor %}
+          {% endraw %}
