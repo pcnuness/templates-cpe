@@ -67,16 +67,16 @@ spec:
           - source: "."
             target: "/"
 
-    - id: create_pr
-      name: Criar Pull Request
-      action: publish:github:pull-request
-      input:
-        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
-        title: "feat: ${{ parameters.projectName }} - estrutura GitOps base"
-        branchName: "feat-${{ parameters.projectName }}"
-        description: "Código para provisionar estrutura GitOps com os add-ons ${{ parameters.AddonsAWS }} e ${{ parameters.AddonsOSS }}"
-        sourcePath: "."
-        targetPath: "./"
+    # - id: create_pr
+    #   name: Criar Pull Request
+    #   action: publish:github:pull-request
+    #   input:
+    #     repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
+    #     title: "feat: ${{ parameters.projectName }} - estrutura GitOps base"
+    #     branchName: "feat-${{ parameters.projectName }}"
+    #     description: "Código para provisionar estrutura GitOps com os add-ons ${{ parameters.AddonsAWS }} e ${{ parameters.AddonsOSS }}"
+    #     sourcePath: "."
+    #     targetPath: "./"
 
   output:
     links:
