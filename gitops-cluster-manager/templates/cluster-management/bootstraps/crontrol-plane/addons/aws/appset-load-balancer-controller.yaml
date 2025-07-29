@@ -1,0 +1,9 @@
+{% if values.enabledAddonAWSLB %}
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: appset-load-balancer-controller
+  namespace: argocd
+spec:
+  ...
+{% endif %}
