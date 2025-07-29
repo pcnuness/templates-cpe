@@ -14,6 +14,7 @@ metadata:
 spec:
   owner: gitops-plataform
   type: gitops
+
   parameters:
     - title: GitOps Repository Details
       required: [projectName, owner]
@@ -26,6 +27,7 @@ spec:
           title: Organização ou Usuário no GitHub
           type: string
           default: pcnunes
+
     - title: Configuração de Addons
       properties:
         addonsAWS:
@@ -48,18 +50,73 @@ spec:
               - ingress-nginx
               - argocd-ingress
           default: ["crossplane"]
+
   steps:
-    - id: fetch-template
-      name: Gerar estrutura GitOps com Addons
+    - id: fetch-base
+      name: Gerar estrutura base GitOps
       action: fetch:template
       input:
         targetPath: "."
-        url: "./templates"
+        url: "./templates/base"
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
-          AddonsAWS: ${{ parameters.AddonsAWS }}
-          AddonsOSS: ${{ parameters.AddonsOSS }}
+
+    # AWS Addons
+    - id: fetch-addon-aws-lb
+      name: Adicionar AWS Load Balancer Controller
+      if: ${{ parameters.addonsAWS && "load-balancer-controller" in parameters.addonsAWS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
+        url: "./templates/addons/aws/load-balancer-controller"
+        values: {}
+
+    - id: fetch-addon-aws-extdns
+      name: Adicionar External DNS
+      if: ${{ parameters.addonsAWS && "external-dns" in parameters.addonsAWS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
+        url: "./templates/addons/aws/external-dns"
+        values: {}
+
+    - id: fetch-addon-aws-ebs
+      name: Adicionar EBS CSI Driver
+      if: ${{ parameters.addonsAWS && "ebs-csi-driver" in parameters.addonsAWS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/aws"
+        url: "./templates/addons/aws/ebs-csi-driver"
+        values: {}
+
+    # OSS Addons
+    - id: fetch-addon-oss-crossplane
+      name: Adicionar Crossplane
+      if: ${{ parameters.addonsOSS && "crossplane" in parameters.addonsOSS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
+        url: "./templates/addons/oss/crossplane"
+        values: {}
+
+    - id: fetch-addon-oss-ingress
+      name: Adicionar Ingress NGINX
+      if: ${{ parameters.addonsOSS && "ingress-nginx" in parameters.addonsOSS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
+        url: "./templates/addons/oss/ingress-nginx"
+        values: {}
+
+    - id: fetch-addon-oss-argocd
+      name: Adicionar ArgoCD Ingress
+      if: ${{ parameters.addonsOSS && "argocd-ingress" in parameters.addonsOSS }}
+      action: fetch:template
+      input:
+        targetPath: "cluster-management/bootstraps/control-plane/addons/oss"
+        url: "./templates/addons/oss/argocd-ingress"
+        values: {}
 
     - id: push-initial
       name: Push Inicial
@@ -77,19 +134,8 @@ spec:
           - source: "."
             target: "/"
 
-    # - id: create_pr
-    #   name: Criar Pull Request
-    #   action: publish:github:pull-request
-    #   input:
-    #     repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
-    #     title: "feat: ${{ parameters.projectName }} - estrutura GitOps base"
-    #     branchName: "feat-${{ parameters.projectName }}"
-    #     description: "Código para provisionar estrutura GitOps com os add-ons ${{ parameters.AddonsAWS }} e ${{ parameters.AddonsOSS }}"
-    #     sourcePath: "."
-    #     targetPath: "./"
-
   output:
     links:
-      - title: Projeto GitHub
-        url: "${{ steps.create_pr.output.remoteUrl }}"
-        text: "Pull Request criado"
+      - title: Repositório no GitHub
+        url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
+        text: "Acesse o repositório criado"
