@@ -1,4 +1,3 @@
-{% if "load-balancer-controller" in addons %}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -84,4 +83,3 @@ spec:
         - group: admissionregistration.k8s.io
           kind: ValidatingWebhookConfiguration
           jqPathExpressions: ['.webhooks[].clientConfig.caBundle']
-{% endif %}
