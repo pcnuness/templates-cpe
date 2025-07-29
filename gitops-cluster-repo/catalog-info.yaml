@@ -27,17 +27,27 @@ spec:
           type: string
           default: pcnunes
     - title: Configuração de Addons
-      required: [AddonsAWS, AddonsOSS]
       properties:
-        AddonsAWS:
-          title: Nome Addon AWS
-          type: string
-          default: alb-controller
-        AddonsOSS:
-          title: Nome Addon OSS
-          type: string
-          default: crossplane
-
+        addonsAWS:
+          title: Selecione Add-ons AWS
+          type: array
+          items:
+            type: string
+            enum:
+              - load-balancer-controller
+              - external-dns
+              - ebs-csi-driver
+          default: ["load-balancer-controller"]
+        addonsOSS:
+          title: Selecione Add-ons OSS
+          type: array
+          items:
+            type: string
+            enum:
+              - crossplane
+              - ingress-nginx
+              - argocd-ingress
+          default: ["crossplane"]
   steps:
     - id: fetch-template
       name: Gerar estrutura GitOps com Addons
