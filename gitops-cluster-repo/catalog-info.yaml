@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: gitops-cluster-repo
-  title: Novo Repositório GitOps com Addons
-  description: Cria um repositório GitOps com estrutura base e add-ons AWS e OSS opcionais.
+  title: Novo Repositório GitOps Padrão
+  description: Cria um repositório GitOps com estrutura padrão de gerenciamento de cluster
   tags:
     - gitops
     - argocd
@@ -12,6 +12,7 @@ metadata:
 spec:
   owner: gitops-plataform
   type: gitops
+
   parameters:
     - title: Informações do Repositório
       required: [projectName, owner]
@@ -21,28 +22,13 @@ spec:
           type: string
           default: cluster-management
         owner:
-          title: Organização ou Usuário no GitHub
+          title: Organização ou Usuário GitHub
           type: string
           default: pcnunes
-    - title: Addons Disponíveis
-      properties:
-        addonAWS:
-          title: Selecione o Addon AWS (opcional)
-          type: string
-          enum:
-            - load-balancer-controller
-          default: load-balancer-controller
-        addonOSS:
-          title: Selecione o Addon OSS (opcional)
-          type: string
-          enum:
-            - crossplane
-          default: crossplane
 
   steps:
-    # 1. Estrutura base do repositório (sem addons ainda)
     - id: step-base
-      name: Criar estrutura base GitOps
+      name: Gerar Estrutura GitOps Completa
       action: fetch:template
       input:
         url: ./gitops-cluster-repo/templates/cluster-management
@@ -51,35 +37,14 @@ spec:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
 
-    # 2. Adiciona o addon AWS selecionado
-    - id: step-addon-aws
-      name: Adicionar Addon AWS
-      action: fetch:template
-      input:
-        url: ./gitops-cluster-repo/templates/cluster-management/bootstraps/crontrol-plane/addons/aws
-        targetPath: ./bootstraps/crontrol-plane/addons/aws
-        values:
-          selectedAddon: ${{ parameters.addonAWS }}
-
-    # 3. Adiciona o addon OSS selecionado
-    - id: step-addon-oss
-      name: Adicionar Addon OSS
-      action: fetch:template
-      input:
-        url: ./gitops-cluster-repo/templates/cluster-management/bootstraps/crontrol-plane/addons/oss
-        targetPath: ./bootstraps/crontrol-plane/addons/oss
-        values:
-          selectedAddon: ${{ parameters.addonOSS }}
-
-    # 4. Publica o repositório final
     - id: step-push
-      name: Push Inicial
+      name: Commit Inicial no GitHub
       action: publish:github
       input:
         repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
-        commitMessage: "Initial commit com estrutura base e addons selecionados"
+        commitMessage: "Initial commit com estrutura GitOps completa"
         authorName: Backstage Scaffolder
         authorEmail: scaffolder@domain.com
         committerName: Backstage Scaffolder
@@ -87,5 +52,5 @@ spec:
 
   output:
     links:
-      - title: Acesse o repositório no GitHub
+      - title: Repositório GitHub
         url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
