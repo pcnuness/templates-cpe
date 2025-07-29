@@ -3,13 +3,12 @@ kind: Template
 metadata:
   name: gitops-cluster-repo
   title: Novo Repositório GitOps com Addons
-  description: Cria um repositório GitOps com estrutura padrão de gerenciamento de cluster e opções de addons AWS e OSS.
+  description: Cria um repositório GitOps com estrutura base e add-ons AWS e OSS opcionais.
   tags:
     - gitops
     - argocd
     - kubernetes
     - aws
-    - addons
 spec:
   owner: gitops-plataform
   type: gitops
@@ -22,62 +21,57 @@ spec:
           type: string
           default: cluster-management
         owner:
-          title: Organização ou Usuário GitHub
+          title: Organização ou Usuário no GitHub
           type: string
           default: pcnunes
-
-    - title: Seleção de Addons
+    - title: Addons Disponíveis
       properties:
-        addonsAWS:
-          title: Add-ons AWS
-          type: array
-          items:
-            type: string
-            enum:
-              - load-balancer-controller
-          default: ["load-balancer-controller"]
-        addonsOSS:
-          title: Add-ons OSS
-          type: array
-          items:
-            type: string
-            enum:
-              - crossplane
-          default: ["crossplane"]
+        addonAWS:
+          title: Selecione o Addon AWS (opcional)
+          type: string
+          enum:
+            - load-balancer-controller
+          default: load-balancer-controller
+        addonOSS:
+          title: Selecione o Addon OSS (opcional)
+          type: string
+          enum:
+            - crossplane
+          default: crossplane
 
   steps:
+    # 1. Estrutura base do repositório (sem addons ainda)
     - id: step-base
-      name: Gerar Estrutura Base
+      name: Criar estrutura base GitOps
       action: fetch:template
       input:
-        url: ./base
+        url: ./gitops-cluster-repo/templates/cluster-management
         targetPath: .
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
 
-    # Loop pelos Addons AWS selecionados
-    - id: step-aws
-      name: Gerar Addons AWS
-      if: ${{ parameters.addonsAWS && parameters.addonsAWS.length > 0 }}
+    # 2. Adiciona o addon AWS selecionado
+    - id: step-addon-aws
+      name: Adicionar Addon AWS
       action: fetch:template
       input:
-        url: ./addons/aws
-        targetPath: .
+        url: ./gitops-cluster-repo/templates/cluster-management/bootstraps/crontrol-plane/addons/aws
+        targetPath: ./bootstraps/crontrol-plane/addons/aws
         values:
-          selectedAddons: ${{ parameters.addonsAWS }}
+          selectedAddon: ${{ parameters.addonAWS }}
 
-    # Loop pelos Addons OSS selecionados
-    - id: step-oss
-      name: Gerar Addons OSS
-      if: ${{ parameters.addonsOSS && parameters.addonsOSS.length > 0 }}
+    # 3. Adiciona o addon OSS selecionado
+    - id: step-addon-oss
+      name: Adicionar Addon OSS
       action: fetch:template
       input:
-        url: ./addons/oss
-        targetPath: .
+        url: ./gitops-cluster-repo/templates/cluster-management/bootstraps/crontrol-plane/addons/oss
+        targetPath: ./bootstraps/crontrol-plane/addons/oss
         values:
-          selectedAddons: ${{ parameters.addonsOSS }}
+          selectedAddon: ${{ parameters.addonOSS }}
 
+    # 4. Publica o repositório final
     - id: step-push
       name: Push Inicial
       action: publish:github
@@ -85,7 +79,7 @@ spec:
         repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
-        commitMessage: "Initial commit com estrutura GitOps e addons selecionados"
+        commitMessage: "Initial commit com estrutura base e addons selecionados"
         authorName: Backstage Scaffolder
         authorEmail: scaffolder@domain.com
         committerName: Backstage Scaffolder
@@ -93,5 +87,5 @@ spec:
 
   output:
     links:
-      - title: Repositório GitHub
+      - title: Acesse o repositório no GitHub
         url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
