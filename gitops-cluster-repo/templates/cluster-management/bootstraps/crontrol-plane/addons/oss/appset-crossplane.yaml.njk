@@ -1,4 +1,4 @@
-{% if "crossplane" in parameters.addonsOSS %}
+{% if parameters.addonsOSS and "crossplane" in parameters.addonsOSS %}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet

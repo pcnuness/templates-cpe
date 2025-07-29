@@ -1,4 +1,4 @@
-{% if "load-balancer-controller" in parameters.addonsAWS %}
+{% if parameters.addonsAWS and "load-balancer-controller" in parameters.addonsAWS %}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
