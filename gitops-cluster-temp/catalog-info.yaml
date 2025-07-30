@@ -69,7 +69,7 @@ spec:
       action: fetch:template
       input:
         url: ./templates/addons/aws/aws-load-balancer-controller/
-        targetPath: cluster-management/bootstraps/control-plane/addons/aws/
+        targetPath: bootstraps/control-plane/addons/aws/
         values:
           projectName: ${{ parameters.projectName }}
 
@@ -79,7 +79,7 @@ spec:
       action: fetch:template
       input:
         url: ./templates/addons/oss/argocd-ingress/
-        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
+        targetPath: bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
@@ -89,7 +89,7 @@ spec:
       action: fetch:template
       input:
         url: ./templates/addons/oss/crossplane/
-        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
+        targetPath: bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
@@ -99,7 +99,7 @@ spec:
       action: fetch:template
       input:
         url: ./templates/addons/oss/ingress-nginx/
-        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
+        targetPath: bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
@@ -152,7 +152,6 @@ spec:
 
           ### Estrutura Criada:
           ```
-          cluster-management/
           ├── README.md
           ├── bootstraps/
           │   ├── cluster-init/
