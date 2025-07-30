@@ -77,6 +77,16 @@ spec:
         values:
           projectName: ${{ parameters.projectName }}
 
+    - id: keda
+      name: Gerar Addon Keda
+      action: fetch:template
+      when: ${{ parameters.keda }}
+      input:
+        url: ./templates/addons/oss/
+        targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/keda.yaml
+        values:
+          projectName: ${{ parameters.projectName }}
+
     - id: push-initial
       name: Push Inicial
       action: publish:github
