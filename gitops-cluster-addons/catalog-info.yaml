@@ -5,7 +5,7 @@ metadata:
   title: Criar estrutura GitOps com Add-ons
   description: Criação de estrutura GitOps com escolha de Add-ons
   annotations:
-    backstage.io/source-template: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
+    backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
 spec:
   owner: gitops-plataform
   type: service
