@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws1
-  title: aws1
+  name: aws2
+  title: aws2
   description: Criação de estrutura GitOps com escolha de Add-ons
   annotations:
     backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
@@ -28,11 +28,11 @@ spec:
         aws-alb-controller:
           type: boolean
           title: Incluir AWS-Load-Balancer-Controller
-          default: true
+          default: false
         ingressNginx:
           type: boolean
           title: Incluir Ingress-Nginx
-          default: true
+          default: false
         keda:
           type: boolean
           title: Incluir KEDA
