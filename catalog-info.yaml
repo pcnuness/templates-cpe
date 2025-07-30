@@ -7,5 +7,5 @@ spec:
   type: url
   targets:
     - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
-    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-addons/catalog-info.yaml"
+    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-manager-addons/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/iac-tofu-eks-temp/template.yaml"
