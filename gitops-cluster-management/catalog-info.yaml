@@ -50,6 +50,7 @@ spec:
         repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         branch: main
         defaultBranch: main
+        repoVisibility: public
         committerName: "Backstage Scaffolder"
         committerEmail: "scaffolder@mydomain.com"
         authorName: "Backstage Scaffolder"
