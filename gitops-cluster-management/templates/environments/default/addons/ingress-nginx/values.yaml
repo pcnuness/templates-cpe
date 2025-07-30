@@ -1,3 +1,4 @@
+{% if 'ingress-nginx' in values.addons %}
 ---
 controller:
   kind: DaemonSet
@@ -54,3 +55,5 @@ controller:
     #     metricName: http_requests_total
     #     threshold: '100'
     #     query: sum(rate(http_requests_total{deployment="my-deployment"}[2m]))
+
+{% endif %}
