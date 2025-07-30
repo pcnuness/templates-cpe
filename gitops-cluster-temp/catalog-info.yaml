@@ -135,7 +135,7 @@ spec:
         url: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
         targetPath: ./repo
 
-    # STEPS PARA ADICIONAR ADDONS (mantém igual ao anterior)
+    # STEPS PARA ADICIONAR ADDONS
     - id: fetch-aws-alb-controller
       name: Adicionar AWS Load Balancer Controller
       if: ${{ parameters.operation === 'add' and parameters.enableAwsAlbController }}
@@ -213,7 +213,7 @@ spec:
           projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
           repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
-    # STEPS PARA REMOVER ADDONS (mantém igual ao anterior)
+    # STEPS PARA REMOVER ADDONS
     - id: remove-aws-alb-controller
       name: Remover AWS Load Balancer Controller
       if: ${{ parameters.operation === 'remove' and parameters.enableAwsAlbController }}
@@ -271,16 +271,40 @@ spec:
         files:
           - ./repo/bootstraps/control-plane/addons/oss/appset-metrics-server.yaml
 
-    # CRIAR TEMPLATE DE DESCRIÇÃO DO PR
-    - id: create-pr-description
-      name: Gerar Descrição do PR
+    # CRIAR TEMPLATE DE DESCRIÇÃO DO PR - SEPARADO POR OPERAÇÃO
+    - id: create-pr-description-add
+      name: Gerar Descrição do PR (Adição)
+      if: ${{ parameters.operation === 'add' }}
       action: fetch:template
       input:
         url: ./templates/pr-description-template/
         targetPath: ./temp-pr-description/
         values:
           operation: ${{ parameters.operation }}
-          operationText: ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }}
+          operationText: "Adição"
+          priority: ${{ parameters.priority }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
+          repoName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          targetBranch: ${{ parameters.targetBranch }}
+          enableAwsAlbController: ${{ parameters.enableAwsAlbController }}
+          enableIngressNginx: ${{ parameters.enableIngressNginx }}
+          enableArgoCdIngress: ${{ parameters.enableArgoCdIngress }}
+          enableCrossplane: ${{ parameters.enableCrossplane }}
+          enableKarpenter: ${{ parameters.enableKarpenter }}
+          enableKubePrometheusStack: ${{ parameters.enableKubePrometheusStack }}
+          enableMetricsServer: ${{ parameters.enableMetricsServer }}
+          reviewersList: ${{ parameters.reviewers | join(', ') }}
+
+    - id: create-pr-description-remove
+      name: Gerar Descrição do PR (Remoção)
+      if: ${{ parameters.operation === 'remove' }}
+      action: fetch:template
+      input:
+        url: ./templates/pr-description-template/
+        targetPath: ./temp-pr-description/
+        values:
+          operation: ${{ parameters.operation }}
+          operationText: "Remoção"
           priority: ${{ parameters.priority }}
           repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
           repoName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
@@ -303,7 +327,34 @@ spec:
         repoUrl: ${{ parameters.repositoryPicker }}
         title: ${{ parameters.prTitle }}
         branchName: feature/addons-update-critical
-        description: ${{ steps['create-pr-description'].output.content }}
+        description: |
+          ## 🚨 ATUALIZAÇÃO CRÍTICA - Addons GitOps
+
+          **Operação:** ${{ parameters.operation }} de addons
+          **Prioridade:** CRÍTICA 🚨
+          **Solicitado via:** Backstage Scaffolder
+          **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+
+          ### 📦 Addons Selecionados:
+          ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
+          ${{ parameters.enableIngressNginx ? '- ✅ Ingress NGINX' : '' }}
+          ${{ parameters.enableArgoCdIngress ? '- ✅ ArgoCD Ingress' : '' }}
+          ${{ parameters.enableCrossplane ? '- ✅ Crossplane' : '' }}
+          ${{ parameters.enableKarpenter ? '- ✅ Karpenter' : '' }}
+          ${{ parameters.enableKubePrometheusStack ? '- ✅ Kube Prometheus Stack' : '' }}
+          ${{ parameters.enableMetricsServer ? '- ✅ Metrics Server' : '' }}
+
+          ### ⚠️ ATENÇÃO - PRIORIDADE CRÍTICA:
+          - Este PR requer aprovação imediata
+          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
+          - Monitorar cluster após aplicação
+
+          ### 🔍 Checklist de Revisão:
+          - [ ] Validar sintaxe YAML dos arquivos
+          - [ ] Verificar compatibilidade com cluster existente
+          - [ ] Confirmar configurações de recursos (CPU/Memory)
+          - [ ] Validar dependências entre addons
+
         targetBranch: ${{ parameters.targetBranch }}
         sourcePath: ./repo
         reviewers: ${{ parameters.reviewers }}
@@ -318,7 +369,42 @@ spec:
         repoUrl: ${{ parameters.repositoryPicker }}
         title: ${{ parameters.prTitle }}
         branchName: feature/addons-update-${{ parameters.operation }}-${{ parameters.priority }}
-        description: ${{ steps['create-pr-description'].output.content }}
+        description: |
+          ## 🔄 Atualização de Addons GitOps
+
+          **Operação:** ${{ parameters.operation }} de addons
+          **Prioridade:** ${{ parameters.priority }}
+          **Solicitado via:** Backstage Scaffolder
+          **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+
+          ### 📦 Addons Selecionados:
+          ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
+          ${{ parameters.enableIngressNginx ? '- ✅ Ingress NGINX' : '' }}
+          ${{ parameters.enableArgoCdIngress ? '- ✅ ArgoCD Ingress' : '' }}
+          ${{ parameters.enableCrossplane ? '- ✅ Crossplane' : '' }}
+          ${{ parameters.enableKarpenter ? '- ✅ Karpenter' : '' }}
+          ${{ parameters.enableKubePrometheusStack ? '- ✅ Kube Prometheus Stack' : '' }}
+          ${{ parameters.enableMetricsServer ? '- ✅ Metrics Server' : '' }}
+
+          ### 🔍 Checklist de Revisão:
+          - [ ] Validar sintaxe YAML dos arquivos
+          - [ ] Verificar compatibilidade com cluster existente
+          - [ ] Confirmar configurações de recursos (CPU/Memory)
+          - [ ] Validar dependências entre addons
+          - [ ] Testar em ambiente de desenvolvimento (se aplicável)
+
+          ### 🚀 Próximos Passos Pós-Merge:
+          1. ArgoCD detectará automaticamente as mudanças
+          2. Monitorar logs de sincronização no ArgoCD
+          3. Validar saúde dos addons no cluster
+          4. Executar testes de conectividade (se aplicável)
+
+          ### 🔄 Rollback:
+          Em caso de problemas, reverter este PR ou aplicar:
+          ```bash
+          kubectl delete -f <arquivo-addon-problemático>
+          ```
+
         targetBranch: ${{ parameters.targetBranch }}
         sourcePath: ./repo
         reviewers: ${{ parameters.reviewers }}
@@ -341,19 +427,10 @@ spec:
 
           **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
           **Prioridade:** ${{ parameters.priority }}
-          **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
+          **Operação:** ${{ parameters.operation }} de addons
 
           ### 📋 Próximos Passos:
           1. **Revisão:** Aguardar aprovação dos revisores designados
           2. **Testes:** Executar validações automáticas
           3. **Merge:** Após aprovação, realizar merge
           4. **Monitoramento:** Acompanhar sincronização no ArgoCD
-
-          ### 🔧 Addons Processados:
-          ${{ parameters.enableAwsAlbController ? '- AWS Load Balancer Controller' : '' }}
-          ${{ parameters.enableIngressNginx ? '- Ingress NGINX' : '' }}
-          ${{ parameters.enableArgoCdIngress ? '- ArgoCD Ingress' : '' }}
-          ${{ parameters.enableCrossplane ? '- Crossplane' : '' }}
-          ${{ parameters.enableKarpenter ? '- Karpenter' : '' }}
-          ${{ parameters.enableKubePrometheusStack ? '- Kube Prometheus Stack' : '' }}
-          ${{ parameters.enableMetricsServer ? '- Metrics Server' : '' }}
