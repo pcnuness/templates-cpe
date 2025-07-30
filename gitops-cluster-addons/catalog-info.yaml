@@ -1,11 +1,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: a1
-  title: a1
+  name: awsa
+  title: awsa
   description: Criação de estrutura GitOps com escolha de Add-ons
-  annotations:
-    backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
 spec:
   owner: gitops-plataform
   type: gitops
