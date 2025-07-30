@@ -62,8 +62,8 @@ spec:
       action: fetch:template
       when: ${{ parameters.aws-alb-controller }}
       input:
-        url: ./templates/addons/aws/appset-load-balancer-controller.yaml
-        targetPath: ./cluster-management/bootstraps/control-plane/addons/aws/appset-load-balancer-controller.yaml
+        url: ./templates/addons/aws/
+        targetPath: ./cluster-management/bootstraps/control-plane/addons/aws/
         values:
           projectName: ${{ parameters.projectName }}
   
@@ -72,8 +72,8 @@ spec:
       action: fetch:template
       when: ${{ parameters.ingressNginx }}
       input:
-        url: ./templates/addons/oss/appset-ingress-nginx.yaml
-        targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/appset-ingress-nginx.yaml
+        url: ./templates/addons/oss/
+        targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
