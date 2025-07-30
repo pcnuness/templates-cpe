@@ -187,6 +187,20 @@ spec:
         url: ./skeleton
         targetPath: .
 
+    # ===== PROCESSAR CATALOG-INFO =====
+    - id: process-catalog-info
+      name: 📋 Processar Catalog Info
+      action: fetch:template
+      input:
+        url: ./skeleton/catalog-info.yaml.template
+        targetPath: ./catalog-info.yaml
+        values:
+          projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
+          repoName: ${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}
+          awsRegion: ${{ parameters.awsRegion }}
+          environments: ${{ parameters.environments }}
+
     # ===== PROCESSAR TEMPLATES DINÂMICOS =====
     - id: process-tfvars
       name: 🛠️ Processar Arquivos TFVars
@@ -230,6 +244,7 @@ spec:
       action: fs:delete
       input:
         files:
+          - ./catalog-info.yaml.template
           - ./terraform/blueprint_addons.tf.template
           - ./terraform/environments/dev.tfvars.template
           - ./terraform/environments/stage.tfvars.template
