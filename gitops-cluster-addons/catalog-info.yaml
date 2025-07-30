@@ -28,11 +28,11 @@ spec:
         aws-alb-controller:
           type: boolean
           title: Incluir AWS-Load-Balancer-Controller
-          default: true
+          default: false
         ingressNginx:
           type: boolean
           title: Incluir Ingress-Nginx
-          default: true
+          default: false
         keda:
           type: boolean
           title: Incluir KEDA
@@ -74,16 +74,6 @@ spec:
       name: Gerar Ingress NGINX
       action: fetch:template
       when: ${{ parameters.ingressNginx }}
-      input:
-        url: ./templates/addons/oss/ingress-nginx/
-        targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
-        values:
-          projectName: ${{ parameters.projectName }}
-
-    - id: keda
-      name: Gerar Addon Keda
-      action: fetch:template
-      when: ${{ parameters.keda }}
       input:
         url: ./templates/addons/oss/ingress-nginx/
         targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
