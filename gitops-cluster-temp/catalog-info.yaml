@@ -59,12 +59,12 @@ spec:
           description: Habilitar Crossplane para gerenciamento de infraestrutura
           default: false
         enableKarpenter:
-          title: Ingress NGINX
+          title: Karpenter
           type: boolean
-          description: Habilitar Karpenter
+          description: Habilitar Karpenter para autoscaling de Nodes
           default: false
         enableKubePrometheusStack:
-          title: Ingress NGINX
+          title: Kube Prometheus Stack
           type: boolean
           description: Habilitar Kube Prometheus Stack para Obervibilidade
           default: false
@@ -186,14 +186,23 @@ spec:
           {% if parameters.enableAwsAlbController %}
           - ✅ AWS Load Balancer Controller
           {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - ✅ Ingress NGINX
+          {% endif %}
           {% if parameters.enableArgoCdIngress %}
           - ✅ ArgoCD Ingress
           {% endif %}
           {% if parameters.enableCrossplane %}
           - ✅ Crossplane
           {% endif %}
-          {% if parameters.enableIngressNginx %}
-          - ✅ Ingress NGINX
+          {% if parameters.enableKarpenter %}
+          - ✅ Karpenter
+          {% endif %}
+          {% if parameters.enableKubePrometheusStack %}
+          - ✅ Kube Prometheus Stack
+          {% endif %}
+          {% if parameters.enableMetricsServer %}
+          - ✅ Metrics Server
           {% endif %}
 
           ### Próximos Passos:
