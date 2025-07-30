@@ -83,7 +83,7 @@ spec:
       name: Buscar estrutura base
       action: fetch:template
       input:
-        url: ./templates/cluster-management
+        url: ./templates/cluster-management/bootstraps
         targetPath: .
         values:
           projectName: ${{ parameters.projectName }}
