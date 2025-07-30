@@ -207,9 +207,8 @@ spec:
 
           ### Próximos Passos:
           1. Clone o repositório localmente
-          2. Configure as variáveis específicas do seu ambiente nos arquivos YAML
-          3. Aplique o bootstrap inicial no seu cluster
-          4. Configure o ArgoCD para monitorar o repositório
+          2. Configure kubeConfig `aws eks update-kubeconfig --region <AWS Region> --name <Cluster EKS>`
+          3. Aplique o bootstrap inicial no seu cluster `k apply -f bootstraps/gitops-root.yaml`
 
           ### Estrutura Criada:
           ```
