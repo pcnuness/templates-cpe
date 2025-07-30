@@ -7,8 +7,8 @@ metadata:
     Infraestrutura EKS para o projeto ${{ values.projectName }} usando OpenTofu.
     Gerencia clusters Kubernetes na AWS com pipeline autopilot.
   annotations:
-    backstage.io/source-location: url:https://github.com/${{ values.owner }}/${{ values.repoName }}
-    github.com/project-slug: ${{ values.owner }}/${{ values.repoName }}
+    backstage.io/source-location: url:https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}
+    github.com/project-slug: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}
     backstage.io/techdocs-ref: dir:.
     aws.com/eks-cluster-name: ${{ values.projectName }}-eks
     aws.com/region: ${{ values.awsRegion }}
@@ -24,7 +24,7 @@ metadata:
     - {{ env }}
 {% endfor %}
   links:
-    - url: https://github.com/${{ values.owner }}/${{ values.repoName }}/actions
+    - url: https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}/actions
       title: GitHub Actions
       icon: github
     - url: https://console.aws.amazon.com/eks/home?region=${{ values.awsRegion }}#/clusters

@@ -1,6 +1,6 @@
 name: 'Deploy Infra folder eks-adr-kubernetes'
 description: 'Create Resource in AWS using OpenTofu eks-adr-kubernetes'
-https://github.com/${{ values.owner }}/${{ values.projectName }}
+https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}
 on:
   workflow_dispatch:
     inputs:
