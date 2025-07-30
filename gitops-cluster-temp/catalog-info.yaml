@@ -128,12 +128,13 @@ spec:
         url: ${{ parameters.repositoryUrl }}
         targetPath: ./repo
 
+    # STEPS PARA ADICIONAR ADDONS
     - id: fetch-aws-alb-controller
       name: Adicionar AWS Load Balancer Controller
       if: ${{ parameters.operation === 'add' and parameters.enableAwsAlbController }}
       action: fetch:template
       input:
-        url: ./templates/addons/aws/aws-load-balancer-controller/
+        url: ./templates/addons-operations/aws/aws-load-balancer-controller/
         targetPath: ./repo/bootstraps/control-plane/addons/aws/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -143,7 +144,7 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableIngressNginx }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/ingress-nginx/
+        url: ./templates/addons-operations/oss/ingress-nginx/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -153,7 +154,7 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableArgoCdIngress }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/argocd-ingress/
+        url: ./templates/addons-operations/oss/argocd-ingress/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -163,7 +164,7 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableCrossplane }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/crossplane/
+        url: ./templates/addons-operations/oss/crossplane/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -173,7 +174,7 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableKarpenter }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/karpenter/
+        url: ./templates/addons-operations/oss/karpenter/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -183,7 +184,7 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableKubePrometheusStack }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/kube-prometheus-stack/
+        url: ./templates/addons-operations/oss/kube-prometheus-stack/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
@@ -193,11 +194,12 @@ spec:
       if: ${{ parameters.operation === 'add' and parameters.enableMetricsServer }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/metrics-server/
+        url: ./templates/addons-operations/oss/metrics-server/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
+    # STEPS PARA REMOVER ADDONS
     - id: remove-aws-alb-controller
       name: Remover AWS Load Balancer Controller
       if: ${{ parameters.operation === 'remove' and parameters.enableAwsAlbController }}
@@ -255,12 +257,89 @@ spec:
         files:
           - ./repo/bootstraps/control-plane/addons/oss/appset-metrics-server.yaml
 
+    # CRIAR DESCRIÇÃO DO PR USANDO FETCH:TEMPLATE
     - id: create-pr-description
       name: Gerar Descrição do PR
-      action: roadiehq:utils:fs:write
+      action: fetch:template
       input:
-        path: ./repo/PR_DESCRIPTION.md
-        content: |
+        url: ./templates/pr-description/
+        targetPath: ./repo/
+        values:
+          operation: ${{ parameters.operation }}
+          priority: ${{ parameters.priority }}
+          enableAwsAlbController: ${{ parameters.enableAwsAlbController }}
+          enableIngressNginx: ${{ parameters.enableIngressNginx }}
+          enableArgoCdIngress: ${{ parameters.enableArgoCdIngress }}
+          enableCrossplane: ${{ parameters.enableCrossplane }}
+          enableKarpenter: ${{ parameters.enableKarpenter }}
+          enableKubePrometheusStack: ${{ parameters.enableKubePrometheusStack }}
+          enableMetricsServer: ${{ parameters.enableMetricsServer }}
+
+    # PUBLICAR PR PARA PRIORIDADE CRÍTICA
+    - id: publish-pr-critical
+      name: Criar Pull Request (Prioridade Crítica)
+      if: ${{ parameters.priority === 'critical' }}
+      action: publish:github:pull-request
+      input:
+        repoUrl: ${{ parameters.repositoryUrl }}
+        title: ${{ parameters.prTitle }}
+        branchName: feature/addons-update-${{ '' | now }}
+        description: |
+          ## 🚨 ATUALIZAÇÃO CRÍTICA - Addons GitOps
+
+          **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
+          **Prioridade:** CRÍTICA 🚨
+          **Solicitado via:** Backstage Scaffolder
+
+          ### 📦 Addons Afetados:
+          {% if parameters.enableAwsAlbController %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: AWS Load Balancer Controller
+          {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Ingress NGINX
+          {% endif %}
+          {% if parameters.enableArgoCdIngress %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: ArgoCD Ingress
+          {% endif %}
+          {% if parameters.enableCrossplane %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Crossplane
+          {% endif %}
+          {% if parameters.enableKarpenter %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Karpenter
+          {% endif %}
+          {% if parameters.enableKubePrometheusStack %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Kube Prometheus Stack
+          {% endif %}
+          {% if parameters.enableMetricsServer %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Metrics Server
+          {% endif %}
+
+          ### ⚠️ ATENÇÃO - PRIORIDADE CRÍTICA:
+          - Este PR requer aprovação imediata
+          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
+          - Monitorar cluster após aplicação
+
+          ### 🔍 Checklist de Revisão:
+          - [ ] Validar sintaxe YAML dos arquivos
+          - [ ] Verificar compatibilidade com cluster existente
+          - [ ] Confirmar configurações de recursos (CPU/Memory)
+          - [ ] Validar dependências entre addons
+
+        targetBranch: ${{ parameters.targetBranch }}
+        sourcePath: ./repo
+        reviewers: ${{ parameters.reviewers }}
+        draft: false
+
+    # PUBLICAR PR PARA OUTRAS PRIORIDADES
+    - id: publish-pr-normal
+      name: Criar Pull Request (Prioridade Normal)
+      if: ${{ parameters.priority !== 'critical' }}
+      action: publish:github:pull-request
+      input:
+        repoUrl: ${{ parameters.repositoryUrl }}
+        title: ${{ parameters.prTitle }}
+        branchName: feature/addons-update-${{ '' | now }}
+        description: |
           ## 🔄 Atualização de Addons GitOps
 
           **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
@@ -309,35 +388,8 @@ spec:
           kubectl delete -f <arquivo-addon-problemático>
           ```
 
-    - id: publish-pr-critical
-      name: Criar Pull Request (Prioridade Crítica)
-      if: ${{ parameters.priority === 'critical' }}
-      action: publish:github:pull-request
-      input:
-        repoUrl: ${{ parameters.repositoryUrl }}
-        title: ${{ parameters.prTitle }}
-        branchName: feature/addons-update-${{ '' | now }}
-        description: |
-          ${{ steps['create-pr-description'].output.content }}
         targetBranch: ${{ parameters.targetBranch }}
         sourcePath: ./repo
-        token: ${{ secrets.USER_OAUTH_TOKEN }}
-        reviewers: ${{ parameters.reviewers }}
-        draft: false
-
-    - id: publish-pr-normal
-      name: Criar Pull Request (Prioridade Normal)
-      if: ${{ parameters.priority !== 'critical' }}
-      action: publish:github:pull-request
-      input:
-        repoUrl: ${{ parameters.repositoryUrl }}
-        title: ${{ parameters.prTitle }}
-        branchName: feature/addons-update-${{ '' | now }}
-        description: |
-          ${{ steps['create-pr-description'].output.content }}
-        targetBranch: ${{ parameters.targetBranch }}
-        sourcePath: ./repo
-        token: ${{ secrets.USER_OAUTH_TOKEN }}
         reviewers: ${{ parameters.reviewers }}
         draft: ${{ parameters.createDraft }}
 
@@ -357,19 +409,14 @@ spec:
           ## 🎉 Pull Request Criado com Sucesso!
 
           **Prioridade:** ${{ parameters.priority }}
-          **Status:** ${{ parameters.requiresApproval ? 'Aguardando aprovação' : 'Pronto para merge' }}
-          **Tipo:** ${{ parameters.priority === 'critical' ? 'Produção' : 'Draft' }}
+          **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
+          **Status:** ${{ parameters.priority === 'critical' ? 'Produção (Crítico)' : 'Draft/Revisão' }}
 
           ### 📋 Próximos Passos:
           1. **Revisão:** Aguardar aprovação dos revisores designados
           2. **Testes:** Executar validações automáticas (se configuradas)
           3. **Merge:** Após aprovação, realizar merge para aplicar mudanças
           4. **Monitoramento:** Acompanhar sincronização no ArgoCD
-
-          ### ⚠️ Importante:
-          - Este PR modifica a configuração de addons do cluster
-          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
-          - Em caso de problemas, utilize o processo de rollback documentado
 
           ### 🔧 Addons Selecionados:
           {% if parameters.enableAwsAlbController %}
@@ -393,3 +440,8 @@ spec:
           {% if parameters.enableMetricsServer %}
           - Metrics Server
           {% endif %}
+
+          ### ⚠️ Importante:
+          - Este PR modifica a configuração de addons do cluster
+          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
+          - Em caso de problemas, utilize o processo de rollback documentado
