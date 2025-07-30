@@ -49,6 +49,17 @@ spec:
     #      projectName: ${{ parameters.projectName }}
     #      owner: ${{ parameters.owner }}
     #      addons: ${{ parameters.addons }}
+
+    - id: fetch-base
+      name: Gerar Cluster Base
+      action: fetch:template
+      input:
+        url: ./templates/cluster-management/
+        targetPath: ./cluster-management/
+        values:
+          projectName: ${{ parameters.projectName }}
+  
+
     - id: alb-controller
       name: Gerar AWS ALB Controller
       action: fetch:template
@@ -78,16 +89,6 @@ spec:
         targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
-
-    - id: fetch-base
-      name: Buscar estrutura base
-      action: fetch:template
-      input:
-        url: ./templates/cluster-management/bootstraps
-        targetPath: .
-        values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
           
     - id: push-initial
       name: Push Inicial
@@ -103,7 +104,7 @@ spec:
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
         files:
-          - source: "."
+          - source: "./cluster-management/"
             target: "/"
 
   output:
