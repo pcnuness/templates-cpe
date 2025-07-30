@@ -10,12 +10,16 @@ spec:
 
   parameters:
     - title: Parâmetros da estrutura
-      required:
-        - projectName
+      required: [projectName, owner]
       properties:
         projectName:
-          title: Nome do Projeto
+          title: Nome do Repositório
           type: string
+          default: gitops-cluster
+        owner:
+          title: Organização ou Usuário GitHub
+          type: string
+          default: pcnuness
         addons:
           title: Add-ons a incluir
           type: array
@@ -41,5 +45,5 @@ spec:
       name: Publicar no Repositório
       action: publish:github
       input:
-        repoUrl: github.com?repo=${{ parameters.projectName }}&owner=nuageit&organization=nuageit
+        repoUrl: https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
         repoVisibility: public
