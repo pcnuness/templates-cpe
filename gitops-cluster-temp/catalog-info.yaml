@@ -15,14 +15,20 @@ spec:
   parameters:
     - title: Configurações do Repositório
       required:
-        - repositoryUrl
+        - repoOwner
+        - repoName
         - operation
       properties:
-        repositoryUrl:
-          title: URL do Repositório GitOps
+        repoOwner:
+          title: Proprietário do Repositório
           type: string
-          description: URL completa do repositório GitOps existente
-          pattern: '^https://github\.com/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$'
+          description: Organização ou usuário GitHub
+          pattern: '^[a-zA-Z0-9-_]+$'
+        repoName:
+          title: Nome do Repositório
+          type: string
+          description: Nome do repositório GitOps existente
+          pattern: '^[a-zA-Z0-9-_]+$'
         operation:
           title: Operação
           type: string
@@ -125,7 +131,7 @@ spec:
       name: Clonar Repositório Existente
       action: fetch:plain
       input:
-        url: ${{ parameters.repositoryUrl }}
+        url: https://github.com/${{ parameters.repoOwner }}/${{ parameters.repoName }}
         targetPath: ./repo
 
     # STEPS PARA ADICIONAR ADDONS
@@ -137,7 +143,8 @@ spec:
         url: ./templates/addons-operations/aws/aws-load-balancer-controller/
         targetPath: ./repo/bootstraps/control-plane/addons/aws/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-ingress-nginx
       name: Adicionar Ingress NGINX
@@ -147,7 +154,8 @@ spec:
         url: ./templates/addons-operations/oss/ingress-nginx/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-argocd-ingress
       name: Adicionar ArgoCD Ingress
@@ -157,7 +165,8 @@ spec:
         url: ./templates/addons-operations/oss/argocd-ingress/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-crossplane
       name: Adicionar Crossplane
@@ -167,7 +176,8 @@ spec:
         url: ./templates/addons-operations/oss/crossplane/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-karpenter
       name: Adicionar Karpenter
@@ -177,7 +187,8 @@ spec:
         url: ./templates/addons-operations/oss/karpenter/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-kube-prometheus-stack
       name: Adicionar Kube Prometheus Stack
@@ -187,7 +198,8 @@ spec:
         url: ./templates/addons-operations/oss/kube-prometheus-stack/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     - id: fetch-metrics-server
       name: Adicionar Metrics Server
@@ -197,7 +209,8 @@ spec:
         url: ./templates/addons-operations/oss/metrics-server/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
+          projectName: ${{ parameters.repoName }}
+          repoOwner: ${{ parameters.repoOwner }}
 
     # STEPS PARA REMOVER ADDONS
     - id: remove-aws-alb-controller
@@ -263,7 +276,7 @@ spec:
       if: ${{ parameters.priority === 'critical' }}
       action: publish:github:pull-request
       input:
-        repoUrl: ${{ parameters.repositoryUrl }}
+        repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
         title: ${{ parameters.prTitle }}
         branchName: feature/addons-update-${{ '' | now }}
         description: |
@@ -273,6 +286,7 @@ spec:
           **Prioridade:** CRÍTICA 🚨
           **Solicitado via:** Backstage Scaffolder
           **Data/Hora:** ${{ '' | now }}
+          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
 
           ### 📦 Addons Selecionados:
           ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
@@ -311,7 +325,7 @@ spec:
       if: ${{ parameters.priority !== 'critical' }}
       action: publish:github:pull-request
       input:
-        repoUrl: ${{ parameters.repositoryUrl }}
+        repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
         title: ${{ parameters.prTitle }}
         branchName: feature/addons-update-${{ '' | now }}
         description: |
@@ -321,6 +335,7 @@ spec:
           **Prioridade:** ${{ parameters.priority }}
           **Solicitado via:** Backstage Scaffolder
           **Data/Hora:** ${{ '' | now }}
+          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
 
           ### 📦 Addons Selecionados:
           ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
@@ -351,7 +366,7 @@ spec:
           ```
 
           ### 📋 Informações Técnicas:
-          - **Repositório:** ${{ parameters.repositoryUrl }}
+          - **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
           - **Branch Base:** ${{ parameters.targetBranch }}
           - **Revisores:** ${{ parameters.reviewers | join(', ') }}
 
@@ -375,6 +390,7 @@ spec:
         content: |
           ## 🎉 Pull Request Criado com Sucesso!
 
+          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
           **Prioridade:** ${{ parameters.priority }}
           **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
           **Status:** ${{ parameters.priority === 'critical' ? 'Produção (Crítico)' : 'Draft/Revisão' }}
