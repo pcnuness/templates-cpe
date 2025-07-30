@@ -1,14 +1,12 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws3
-  title: aws3
-  description: Criação de estrutura GitOps com escolha de Add-ons
-  annotations:
-    backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
+  name: provisionar-addons-gitops
+  title: Criar estrutura GitOps com Add-ons
+  description: Criação de estrutura GitOps com escolha de Add-ons para clusters Kubernetes
 spec:
   owner: gitops-plataform
-  type: gitops
+  type: service
 
   parameters:
     - title: Parâmetros da estrutura
@@ -32,44 +30,45 @@ spec:
         ingressNginx:
           type: boolean
           title: Incluir Ingress-Nginx
+          default: true
+        crossplane:
+          type: boolean
+          title: Incluir Crossplane (Provisionamento de Infraestrutura)
           default: false
         keda:
           type: boolean
-          title: Incluir KEDA
+          title: Incluir KEDA (Escalonamento baseado em Eventos)
+          default: false
+        karpenter:
+          type: boolean
+          title: Incluir Karpenter (Autoscaling de Nodes)
+          default: false
+        kube-prometheus-stack:
+          type: boolean
+          title: Incluir Kube-Prometheus-Stack (Monitoramento)
           default: false
 
   steps:
-    #- id: fetch-template
-    #  name: Gerar estrutura GitOps com Addons
-    #  action: fetch:template
-    #  input:
-    #    targetPath: "."
-    #    url: "./templates"
-    #    values:
-    #      projectName: ${{ parameters.projectName }}
-    #      owner: ${{ parameters.owner }}
-    #      addons: ${{ parameters.addons }}
-
     - id: fetch-base
-      name: Gerar Cluster Base
+      name: Buscar estrutura base
       action: fetch:template
       input:
-        url: ./templates/cluster-management/
-        targetPath: ./cluster-management/
+        url: ./templates/cluster-management
+        targetPath: .
         values:
           projectName: ${{ parameters.projectName }}
-  
+          owner: ${{ parameters.owner }}
 
     - id: alb-controller
       name: Gerar AWS ALB Controller
       action: fetch:template
-      when: ${{ parameters.aws-alb-controller }}
+      when: ${{ parameters['aws-alb-controller'] }}
       input:
         url: ./templates/addons/aws/aws-load-balancer-controller
         targetPath: ./cluster-management/bootstraps/control-plane/addons/aws/
         values:
           projectName: ${{ parameters.projectName }}
-  
+
     - id: ingress-nginx
       name: Gerar Ingress NGINX
       action: fetch:template
@@ -94,7 +93,7 @@ spec:
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
         files:
-          - source: "./cluster-management/"
+          - source: "."
             target: "/"
 
   output:
