@@ -184,8 +184,8 @@ spec:
       name: 📥 Buscar Arquivos Base
       action: fetch:plain
       input:
-        url: ./skeleton
-        targetPath: .
+        url: ./skeleton/terraform
+        targetPath: ./
 
     # ===== PROCESSAR CATALOG-INFO =====
     - id: process-catalog-info
