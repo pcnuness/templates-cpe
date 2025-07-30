@@ -1,102 +1,161 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: provisionar-addons-gitops-1
-  title: Criar estrutura GitOps com Add-ons - 1
-  description: Criação de estrutura GitOps com escolha de Add-ons para clusters Kubernetes
+  name: criar-cluster-gitops-avancado
+  title: Criar Repositório GitOps de Cluster com Addons
+  description: Gera uma estrutura de repositório GitOps para gerenciamento de clusters Kubernetes, com seleção de addons essenciais.
+  tags:
+    - kubernetes
+    - gitops
+    - cluster-management
+    - argocd
 spec:
-  owner: gitops-plataform
+  owner: plataforma-gitops
   type: service
-
   parameters:
-    - title: Parâmetros da estrutura
-      required: [projectName, owner]
+    - title: Configurações Básicas
+      required:
+        - projectName
+        - owner
       properties:
         projectName:
           title: Nome do Repositório
           type: string
-          default: gitops-cluster
+          description: Nome do repositório a ser criado
+          default: meu-cluster-gitops
+          pattern: '^[a-zA-Z0-9-_]+$'
         owner:
           title: Organização ou Usuário GitHub
           type: string
-          default: pcnuness
-    - title: Selecione Addons
-      type: object
+          description: Organização ou usuário GitHub que será proprietário do repositório
+          default: sua-org
+          pattern: '^[a-zA-Z0-9-_]+$'
+    - title: Seleção de Addons
       properties:
-        aws-alb-controller:
+        enableAwsAlbController:
+          title: AWS Load Balancer Controller
           type: boolean
-          title: Incluir AWS-Load-Balancer-Controller
-          default: false
-        ingressNginx:
-          type: boolean
-          title: Incluir Ingress-Nginx
+          description: Habilitar AWS Application Load Balancer Controller
           default: true
-        crossplane:
+        enableArgoCdIngress:
+          title: ArgoCD Ingress
           type: boolean
-          title: Incluir Crossplane (Provisionamento de Infraestrutura)
+          description: Habilitar configuração de Ingress para ArgoCD
           default: false
-        keda:
+        enableCrossplane:
+          title: Crossplane
           type: boolean
-          title: Incluir KEDA (Escalonamento baseado em Eventos)
+          description: Habilitar Crossplane para gerenciamento de infraestrutura
           default: false
-        karpenter:
+        enableIngressNginx:
+          title: Ingress NGINX
           type: boolean
-          title: Incluir Karpenter (Autoscaling de Nodes)
+          description: Habilitar Ingress NGINX Controller
           default: false
-        kube-prometheus-stack:
-          type: boolean
-          title: Incluir Kube-Prometheus-Stack (Monitoramento)
-          default: false
-
   steps:
-    - id: fetch-base
-      name: Buscar estrutura base
+    - id: fetch-base-structure
+      name: Buscar Estrutura Base
       action: fetch:template
       input:
-        url: ./templates/cluster-management
-        targetPath: .
+        url: ./templates/cluster-management-base-structure/
+        targetPath: ./
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
 
-    - id: alb-controller
-      name: Gerar AWS ALB Controller
+    - id: fetch-aws-alb-controller
+      name: Adicionar AWS Load Balancer Controller
+      if: ${{ parameters.enableAwsAlbController }}
       action: fetch:template
-      when: ${{ parameters['aws-alb-controller'] }}
       input:
-        url: ./templates/addons/aws/aws-load-balancer-controller
-        targetPath: ./cluster-management/bootstraps/control-plane/addons/aws/
+        url: ./templates/addons/aws/aws-load-balancer-controller/
+        targetPath: cluster-management/bootstraps/control-plane/addons/aws/
         values:
           projectName: ${{ parameters.projectName }}
 
-    - id: ingress-nginx
-      name: Gerar Ingress NGINX
+    - id: fetch-argocd-ingress
+      name: Adicionar ArgoCD Ingress
+      if: ${{ parameters.enableArgoCdIngress }}
       action: fetch:template
-      when: ${{ parameters.ingressNginx }}
       input:
-        url: ./templates/addons/oss/ingress-nginx
-        targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
+        url: ./templates/addons/oss/argocd-ingress/
+        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
-    - id: push-initial
-      name: Push Inicial
+    - id: fetch-crossplane
+      name: Adicionar Crossplane
+      if: ${{ parameters.enableCrossplane }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/crossplane/
+        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+
+    - id: fetch-ingress-nginx
+      name: Adicionar Ingress NGINX
+      if: ${{ parameters.enableIngressNginx }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/ingress-nginx/
+        targetPath: cluster-management/bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+
+    - id: publish-repository
+      name: Publicar Repositório no GitHub
       action: publish:github
       input:
-        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
-        branch: main
+        allowedHosts: ['github.com']
+        description: Repositório GitOps para gerenciamento de cluster Kubernetes gerado pelo Backstage
+        repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
         defaultBranch: main
+        gitCommitMessage: Initial commit from Backstage Scaffolder
+        gitAuthorName: Backstage Scaffolder
+        gitAuthorEmail: scaffolder@backstage.io
         repoVisibility: public
-        committerName: "Backstage Scaffolder"
-        committerEmail: "scaffolder@mydomain.com"
-        authorName: "Backstage Scaffolder"
-        authorEmail: "scaffolder@mydomain.com"
-        commitMessage: "Initial commit from Scaffolder"
-        files:
-          - source: "."
-            target: "/"
 
   output:
     links:
-      - title: Repositório GitHub
-        url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
+      - title: Repositório no GitHub
+        url: ${{ steps['publish-repository'].output.remoteUrl }}
+      - title: Abrir no GitHub
+        url: ${{ steps['publish-repository'].output.remoteUrl }}
+        icon: github
+    text:
+      - title: Próximos Passos
+        content: |
+          ## Repositório GitOps Criado com Sucesso! 🎉
+
+          Seu repositório **${{ parameters.projectName }}** foi criado com a estrutura GitOps completa.
+
+          ### Addons Habilitados:
+          {% if parameters.enableAwsAlbController %}
+          - ✅ AWS Load Balancer Controller
+          {% endif %}
+          {% if parameters.enableArgoCdIngress %}
+          - ✅ ArgoCD Ingress
+          {% endif %}
+          {% if parameters.enableCrossplane %}
+          - ✅ Crossplane
+          {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - ✅ Ingress NGINX
+          {% endif %}
+
+          ### Próximos Passos:
+          1. Clone o repositório localmente
+          2. Configure as variáveis específicas do seu ambiente nos arquivos YAML
+          3. Aplique o bootstrap inicial no seu cluster
+          4. Configure o ArgoCD para monitorar o repositório
+
+          ### Estrutura Criada:
+          ```
+          cluster-management/
+          ├── README.md
+          ├── bootstraps/
+          │   ├── cluster-init/
+          │   ├── control-plane/
+          │   └── gitops-root.yaml
+          ```
