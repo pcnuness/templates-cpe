@@ -1,0 +1,253 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: criar-cluster-gitops-avancado
+  title: Criar Repositório GitOps de Cluster com Addons
+  description: Gera uma estrutura de repositório GitOps para gerenciamento de clusters Kubernetes, com seleção de addons essenciais.
+  tags:
+    - kubernetes
+    - gitops
+    - cluster-management
+    - argocd
+spec:
+  owner: plataforma-gitops
+  type: service
+  parameters:
+    - title: Configurações Básicas
+      required:
+        - projectName
+        - owner
+      properties:
+        projectName:
+          title: Nome do Repositório
+          type: string
+          description: Nome do repositório a ser criado
+          default: meu-cluster-gitops
+          pattern: '^[a-zA-Z0-9-_]+$'
+        owner:
+          title: Organização ou Usuário GitHub
+          type: string
+          description: Organização ou usuário GitHub que será proprietário do repositório
+          default: sua-org
+          pattern: '^[a-zA-Z0-9-_]+$'
+        targetRevision:
+          title: Nome do Branch GitOps
+          type: string
+          description: Nome da branch utilizada no monitoramento gitops
+          default: main
+          pattern: '^[a-zA-Z0-9-_/]+$'
+    - title: Seleção de Addons
+      properties:
+        enableAwsAlbController:
+          title: AWS Load Balancer Controller
+          type: boolean
+          description: Habilitar AWS Application Load Balancer Controller
+          default: true
+        enableIngressNginx:
+          title: Ingress NGINX
+          type: boolean
+          description: Habilitar Ingress NGINX Controller
+          default: false
+        enableArgoCdIngress:
+          title: ArgoCD Ingress
+          type: boolean
+          description: Habilitar configuração de Ingress para ArgoCD
+          default: false
+        enableCrossplane:
+          title: Crossplane
+          type: boolean
+          description: Habilitar Crossplane para gerenciamento de infraestrutura
+          default: false
+        enableKarpenter:
+          title: Karpenter
+          type: boolean
+          description: Habilitar Karpenter para autoscaling de Nodes
+          default: false
+        enableKubePrometheusStack:
+          title: Kube Prometheus Stack
+          type: boolean
+          description: Habilitar Kube Prometheus Stack para Observabilidade
+          default: false
+        enableMetricsServer:
+          title: Metrics Server
+          type: boolean
+          description: Habilitar Metrics Server para monitoramento do Kubernetes
+          default: false
+  steps:
+    - id: fetch-base-structure
+      name: Buscar Estrutura Base
+      action: fetch:template
+      input:
+        url: ./templates/cluster-management-base-structure/
+        targetPath: ./
+        values:
+          projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.owner }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-aws-alb-controller
+      name: Adicionar AWS Load Balancer Controller
+      if: ${{ parameters.enableAwsAlbController }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/aws/aws-load-balancer-controller/
+        targetPath: bootstraps/control-plane/addons/aws/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-ingress-nginx
+      name: Adicionar Ingress NGINX
+      if: ${{ parameters.enableIngressNginx }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/ingress-nginx/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-argocd-ingress
+      name: Adicionar ArgoCD Ingress
+      if: ${{ parameters.enableArgoCdIngress }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/argocd-ingress/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-crossplane
+      name: Adicionar Crossplane
+      if: ${{ parameters.enableCrossplane }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/crossplane/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-karpenter
+      name: Adicionar Karpenter
+      if: ${{ parameters.enableKarpenter }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/karpenter/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-kube-prometheus-stack
+      name: Adicionar Kube Prometheus Stack
+      if: ${{ parameters.enableKubePrometheusStack }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/kube-prometheus-stack/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: fetch-metrics-server
+      name: Adicionar Metrics Server
+      if: ${{ parameters.enableMetricsServer }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/metrics-server/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+          targetRevision: ${{ parameters.targetRevision }}
+
+    - id: publish-repository
+      name: Publicar Repositório no GitHub
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: Repositório GitOps para gerenciamento de cluster Kubernetes gerado pelo Backstage
+        repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
+        defaultBranch: ${{ parameters.targetRevision }}
+        gitCommitMessage: Initial commit from Backstage Scaffolder
+        gitAuthorName: Backstage Scaffolder
+        gitAuthorEmail: scaffolder@backstage.io
+        repoVisibility: public
+
+  output:
+    links:
+      - title: Repositório no GitHub
+        url: ${{ steps['publish-repository'].output.remoteUrl }}
+      - title: Abrir no GitHub
+        url: ${{ steps['publish-repository'].output.remoteUrl }}
+        icon: github
+    text:
+      - title: Próximos Passos
+        content: |
+          ## Repositório GitOps Criado com Sucesso! 🎉
+
+          Seu repositório **${{ parameters.projectName }}** foi criado com a estrutura GitOps completa na branch **${{ parameters.targetRevision }}**.
+
+          ### Addons Habilitados:
+          {% if parameters.enableAwsAlbController %}
+          - ✅ AWS Load Balancer Controller
+          {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - ✅ Ingress NGINX
+          {% endif %}
+          {% if parameters.enableArgoCdIngress %}
+          - ✅ ArgoCD Ingress
+          {% endif %}
+          {% if parameters.enableCrossplane %}
+          - ✅ Crossplane
+          {% endif %}
+          {% if parameters.enableKarpenter %}
+          - ✅ Karpenter
+          {% endif %}
+          {% if parameters.enableKubePrometheusStack %}
+          - ✅ Kube Prometheus Stack
+          {% endif %}
+          {% if parameters.enableMetricsServer %}
+          - ✅ Metrics Server
+          {% endif %}
+
+          ### Próximos Passos:
+          1. **Clone o repositório localmente:**
+             ```bash
+             git clone ${{ steps['publish-repository'].output.remoteUrl }}
+             cd ${{ parameters.projectName }}
+             ```
+
+          2. **Configure kubeConfig:**
+             ```bash
+             aws eks update-kubeconfig --region <AWS_REGION> --name <CLUSTER_NAME>
+             ```
+
+          3. **Aplique o bootstrap inicial:**
+             ```bash
+             kubectl apply -f bootstraps/gitops-root.yaml
+             ```
+
+          ### Estrutura Criada:
+          ```
+          ${{ parameters.projectName }}/
+          ├── README.md
+          ├── bootstraps/
+          │   ├── cluster-init/
+          │   │   ├── app-argocd-projects.yaml
+          │   │   └── app-controle-plane-addons.yaml
+          │   ├── control-plane/
+          │   │   └── addons/
+          │   │       ├── aws/
+          │   │       └── oss/
+          │   └── gitops-root.yaml
+          └── environments/
+              └── default/
+                  └── addons/
+          ```
+
+          ### 📚 Documentação Adicional:
+          - [ArgoCD Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/)
+          - [GitOps Best Practices](https://www.gitops.tech/)
+          - [Kubernetes Documentation](https://kubernetes.io/docs/)

@@ -1,7 +1,0 @@
-{% if 'aws-load-balancer-controller' in values.addons %}
----
-replicaCount: 3
-revisionHistoryLimit: 10
-tolerations: []
-affinity: {}
-{% endif %}

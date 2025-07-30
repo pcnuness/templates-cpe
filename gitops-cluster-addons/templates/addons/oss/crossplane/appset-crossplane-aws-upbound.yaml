@@ -1,14 +1,14 @@
-{% if 'aws-load-balancer-controller' in values.addons %}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: addons-aws-load-balancer-controller
+  name: addons-crossplane-aws-upbound
   namespace: argocd
   annotations:
-    gitops.plataform/area: networking
-    gitops.plataform/service: netwok-egress
-    gitops.plataform/component: network-core
+    argocd.argoproj.io/sync-wave: "-1"
+    gitops.plataform/area: cloud
+    gitops.plataform/service: iac
+    gitops.plataform/component: provider-aws-packages
     gitops.plataform/managed-by: plataform-team
 spec:
   syncPolicy:
@@ -19,12 +19,13 @@ spec:
         generators:
           - clusters:
               values:
-                addonChart: aws-load-balancer-controller
-                addonChartVersion: 1.13.0
-                addonChartRepository: https://aws.github.io/eks-charts
+                addonChart: crossplane-aws-upbound
+                addonChartNamespace: crossplane-system
+                addonChartVersion: 3.0.0
+                addonChartRepository: https://gitops-bridge-dev.github.io/gitops-bridge-helm-charts
               selector:
                 matchExpressions:
-                  - key: enable_aws_load_balancer_controller
+                  - key: enable_aws_crossplane_upbound_provider
                     operator: In
                     values: ['true']
           - clusters:
@@ -32,16 +33,16 @@ spec:
                 matchLabels:
                   environment: staging
               values:
-                addonChartVersion: 1.12.0
+                addonChartVersion: 3.0.0
           - clusters:
               selector:
                 matchLabels:
                   environment: prod
               values:
-                addonChartVersion: 1.11.0
+                addonChartVersion: 3.0.0
   template:
     metadata:
-      name: addon-{{values.addonChart}}-{{name}}
+      name: addon-oss-{{values.addonChart}}-{{name}}
     spec:
       project: cluster-management
       sources:
@@ -57,17 +58,32 @@ spec:
             valueFiles:
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/values.yaml
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
-              - $values/{{metadata.annotations.addons_repo_basepath}}clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}environments/clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
             values: |
-              priorityClassName: system-cluster-critical
-              vpcId: '{{metadata.annotations.aws_vpc_id}}'
-              clusterName: {{metadata.annotations.aws_cluster_name}}
-              serviceAccount:
-                name: {{metadata.annotations.aws_load_balancer_controller_service_account}}
-                annotations:
-                  eks.amazonaws.com/role-arn: {{metadata.annotations.aws_load_balancer_controller_iam_role_arn}}
+              deploymentRuntimeConfig:
+                metadata:
+                  role_arn: {{metadata.annotations.crossplane_iam_role_arn}}
+              provider:
+                package:
+                  registry: xpkg.upbound.io/upbound
+                  version: v1.23.1
+              providers:
+              - s3
+              - secretsmanager
+              # - cloudfront
+              # - cloudwatchlogs
+              # - dynamodb
+              # - ec2
+              # - eks
+              # - firehose
+              # - iam
+              # - kms
+              # - lambda
+              # - rds
+              # - sns
+              # - sqs
       destination:
-        namespace: '{{metadata.annotations.aws_load_balancer_controller_namespace}}'
+        namespace: '{{values.addonChartNamespace}}'
         name: '{{name}}'
       syncPolicy:
         automated: {}
@@ -75,13 +91,8 @@ spec:
           - CreateNamespace=true
           - ServerSideApply=true  # Big CRDs.
       ignoreDifferences:
-        - kind: Secret
-          name: aws-load-balancer-tls
-          jsonPointers: [/data]
-        - group: admissionregistration.k8s.io
-          kind: MutatingWebhookConfiguration
-          jqPathExpressions: ['.webhooks[].clientConfig.caBundle']
-        - group: admissionregistration.k8s.io
-          kind: ValidatingWebhookConfiguration
-          jqPathExpressions: ['.webhooks[].clientConfig.caBundle']
-{% endif %}
+        - kind: Deployment
+          group: apps
+          jqPathExpressions:
+            - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
+            - .spec.template.spec.initContainers[].env[].valueFrom.resourceFieldRef.divisor

@@ -1,4 +1,3 @@
-{% if 'ingress-nginx' in values.addons %}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -35,4 +34,3 @@ spec:
             name: "ingress-nginx-controller"
             port:
               number: 80
-{% endif %}

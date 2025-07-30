@@ -1,253 +1,345 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: criar-cluster-gitops-avancado
-  title: Criar Repositório GitOps de Cluster com Addons
-  description: Gera uma estrutura de repositório GitOps para gerenciamento de clusters Kubernetes, com seleção de addons essenciais.
+  name: gerenciar-addons-gitops
+  title: Gerenciar Addons GitOps - Adicionar/Remover
+  description: Adiciona ou remove addons em repositório GitOps existente via Pull Request
   tags:
     - kubernetes
     - gitops
-    - cluster-management
-    - argocd
+    - addons
+    - pull-request
 spec:
   owner: plataforma-gitops
   type: service
   parameters:
-    - title: Configurações Básicas
+    - title: Configurações do Repositório
       required:
-        - projectName
-        - owner
+        - repositoryUrl
+        - operation
       properties:
-        projectName:
-          title: Nome do Repositório
+        repositoryUrl:
+          title: URL do Repositório GitOps
           type: string
-          description: Nome do repositório a ser criado
-          default: meu-cluster-gitops
-          pattern: '^[a-zA-Z0-9-_]+$'
-        owner:
-          title: Organização ou Usuário GitHub
+          description: URL completa do repositório GitOps existente
+          pattern: '^https://github\.com/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$'
+        operation:
+          title: Operação
           type: string
-          description: Organização ou usuário GitHub que será proprietário do repositório
-          default: sua-org
-          pattern: '^[a-zA-Z0-9-_]+$'
-        targetRevision:
-          title: Nome do Branch GitOps
+          description: Tipo de operação a ser realizada
+          enum:
+            - add
+            - remove
+          enumNames:
+            - Adicionar Addons
+            - Remover Addons
+        targetBranch:
+          title: Branch Base
           type: string
-          description: Nome da branch utilizada no monitoramento gitops
+          description: Branch base para criar o PR
           default: main
-          pattern: '^[a-zA-Z0-9-_/]+$'
-    - title: Seleção de Addons
+        prTitle:
+          title: Título do Pull Request
+          type: string
+          description: Título personalizado para o PR
+          default: "feat: Atualização de addons GitOps via Backstage"
+
+    - title: Seleção de Addons AWS
       properties:
         enableAwsAlbController:
           title: AWS Load Balancer Controller
           type: boolean
-          description: Habilitar AWS Application Load Balancer Controller
-          default: true
+          description: AWS Application Load Balancer Controller
+          default: false
+        
+    - title: Seleção de Addons OSS
+      properties:
         enableIngressNginx:
           title: Ingress NGINX
           type: boolean
-          description: Habilitar Ingress NGINX Controller
+          description: Ingress NGINX Controller
           default: false
         enableArgoCdIngress:
           title: ArgoCD Ingress
           type: boolean
-          description: Habilitar configuração de Ingress para ArgoCD
+          description: Configuração de Ingress para ArgoCD
           default: false
         enableCrossplane:
           title: Crossplane
           type: boolean
-          description: Habilitar Crossplane para gerenciamento de infraestrutura
+          description: Crossplane para gerenciamento de infraestrutura
           default: false
         enableKarpenter:
           title: Karpenter
           type: boolean
-          description: Habilitar Karpenter para autoscaling de Nodes
+          description: Karpenter para autoscaling de Nodes
           default: false
         enableKubePrometheusStack:
           title: Kube Prometheus Stack
           type: boolean
-          description: Habilitar Kube Prometheus Stack para Observabilidade
+          description: Stack de monitoramento Prometheus
           default: false
         enableMetricsServer:
           title: Metrics Server
           type: boolean
-          description: Habilitar Metrics Server para monitoramento do Kubernetes
+          description: Metrics Server para monitoramento
           default: false
+
+    - title: Configurações de Aprovação
+      properties:
+        requiresApproval:
+          title: Requer Aprovação
+          type: boolean
+          description: PR requer aprovação antes do merge
+          default: true
+        reviewers:
+          title: Revisores
+          type: array
+          description: Lista de usuários/equipes para revisar o PR
+          items:
+            type: string
+          default: ["@plataforma-gitops", "@devops-team"]
+        priority:
+          title: Prioridade
+          type: string
+          description: Prioridade da mudança
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+          enumNames:
+            - Baixa
+            - Média
+            - Alta
+            - Crítica
+          default: medium
+
   steps:
-    - id: fetch-base-structure
-      name: Buscar Estrutura Base
-      action: fetch:template
+    - id: fetch-repository
+      name: Clonar Repositório Existente
+      action: fetch:plain
       input:
-        url: ./templates/cluster-management-base-structure/
-        targetPath: ./
-        values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
-          targetRevision: ${{ parameters.targetRevision }}
+        url: ${{ parameters.repositoryUrl }}
+        targetPath: ./repo
 
     - id: fetch-aws-alb-controller
       name: Adicionar AWS Load Balancer Controller
-      if: ${{ parameters.enableAwsAlbController }}
+      if: ${{ parameters.operation === 'add' and parameters.enableAwsAlbController }}
       action: fetch:template
       input:
         url: ./templates/addons/aws/aws-load-balancer-controller/
-        targetPath: bootstraps/control-plane/addons/aws/
+        targetPath: ./repo/bootstraps/control-plane/addons/aws/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-ingress-nginx
       name: Adicionar Ingress NGINX
-      if: ${{ parameters.enableIngressNginx }}
+      if: ${{ parameters.operation === 'add' and parameters.enableIngressNginx }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/ingress-nginx/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-argocd-ingress
       name: Adicionar ArgoCD Ingress
-      if: ${{ parameters.enableArgoCdIngress }}
+      if: ${{ parameters.operation === 'add' and parameters.enableArgoCdIngress }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/argocd-ingress/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-crossplane
       name: Adicionar Crossplane
-      if: ${{ parameters.enableCrossplane }}
+      if: ${{ parameters.operation === 'add' and parameters.enableCrossplane }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/crossplane/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-karpenter
       name: Adicionar Karpenter
-      if: ${{ parameters.enableKarpenter }}
+      if: ${{ parameters.operation === 'add' and parameters.enableKarpenter }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/karpenter/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-kube-prometheus-stack
       name: Adicionar Kube Prometheus Stack
-      if: ${{ parameters.enableKubePrometheusStack }}
+      if: ${{ parameters.operation === 'add' and parameters.enableKubePrometheusStack }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/kube-prometheus-stack/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
     - id: fetch-metrics-server
       name: Adicionar Metrics Server
-      if: ${{ parameters.enableMetricsServer }}
+      if: ${{ parameters.operation === 'add' and parameters.enableMetricsServer }}
       action: fetch:template
       input:
         url: ./templates/addons/oss/metrics-server/
-        targetPath: bootstraps/control-plane/addons/oss/
+        targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.projectName }}
-          targetRevision: ${{ parameters.targetRevision }}
+          projectName: ${{ parameters.repositoryUrl | parseRepoUrl | pick('repo') }}
 
-    - id: publish-repository
-      name: Publicar Repositório no GitHub
-      action: publish:github
+    - id: remove-aws-alb-controller
+      name: Remover AWS Load Balancer Controller
+      if: ${{ parameters.operation === 'remove' and parameters.enableAwsAlbController }}
+      action: fs:delete
       input:
-        allowedHosts: ['github.com']
-        description: Repositório GitOps para gerenciamento de cluster Kubernetes gerado pelo Backstage
-        repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
-        defaultBranch: ${{ parameters.targetRevision }}
-        gitCommitMessage: Initial commit from Backstage Scaffolder
-        gitAuthorName: Backstage Scaffolder
-        gitAuthorEmail: scaffolder@backstage.io
-        repoVisibility: public
+        files:
+          - ./repo/bootstraps/control-plane/addons/aws/appset-load-balancer-controller.yaml
+
+    - id: remove-ingress-nginx
+      name: Remover Ingress NGINX
+      if: ${{ parameters.operation === 'remove' and parameters.enableIngressNginx }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-ingress-nginx.yaml
+
+    - id: remove-argocd-ingress
+      name: Remover ArgoCD Ingress
+      if: ${{ parameters.operation === 'remove' and parameters.enableArgoCdIngress }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-argocd-ingress.yaml
+
+    - id: remove-crossplane
+      name: Remover Crossplane
+      if: ${{ parameters.operation === 'remove' and parameters.enableCrossplane }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-crossplane.yaml
+          - ./repo/bootstraps/control-plane/addons/oss/appset-crossplane-aws-upbound.yaml
+
+    - id: remove-karpenter
+      name: Remover Karpenter
+      if: ${{ parameters.operation === 'remove' and parameters.enableKarpenter }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-karpenter.yaml
+
+    - id: remove-kube-prometheus-stack
+      name: Remover Kube Prometheus Stack
+      if: ${{ parameters.operation === 'remove' and parameters.enableKubePrometheusStack }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-kube-prometheus-stack.yaml
+
+    - id: remove-metrics-server
+      name: Remover Metrics Server
+      if: ${{ parameters.operation === 'remove' and parameters.enableMetricsServer }}
+      action: fs:delete
+      input:
+        files:
+          - ./repo/bootstraps/control-plane/addons/oss/appset-metrics-server.yaml
+
+    - id: create-pr-description
+      name: Gerar Descrição do PR
+      action: roadiehq:utils:fs:write
+      input:
+        path: ./repo/PR_DESCRIPTION.md
+        content: |
+          ## 🔄 Atualização de Addons GitOps
+
+          **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
+          **Prioridade:** ${{ parameters.priority }}
+          **Solicitado via:** Backstage Scaffolder
+
+          ### 📦 Addons Afetados:
+          {% if parameters.enableAwsAlbController %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: AWS Load Balancer Controller
+          {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Ingress NGINX
+          {% endif %}
+          {% if parameters.enableArgoCdIngress %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: ArgoCD Ingress
+          {% endif %}
+          {% if parameters.enableCrossplane %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Crossplane
+          {% endif %}
+          {% if parameters.enableKarpenter %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Karpenter
+          {% endif %}
+          {% if parameters.enableKubePrometheusStack %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Kube Prometheus Stack
+          {% endif %}
+          {% if parameters.enableMetricsServer %}
+          - ${{ parameters.operation === 'add' ? '✅ Adicionado' : '❌ Removido' }}: Metrics Server
+          {% endif %}
+
+          ### 🔍 Checklist de Revisão:
+          - [ ] Validar sintaxe YAML dos arquivos
+          - [ ] Verificar compatibilidade com cluster existente
+          - [ ] Confirmar configurações de recursos (CPU/Memory)
+          - [ ] Validar dependências entre addons
+          - [ ] Testar em ambiente de desenvolvimento (se aplicável)
+
+          ### 🚀 Próximos Passos Pós-Merge:
+          1. ArgoCD detectará automaticamente as mudanças
+          2. Monitorar logs de sincronização no ArgoCD
+          3. Validar saúde dos addons no cluster
+          4. Executar testes de conectividade (se aplicável)
+
+          ### 🔄 Rollback:
+          Em caso de problemas, reverter este PR ou aplicar:
+          ```bash
+          kubectl delete -f <arquivo-addon-problemático>
+          ```
+
+    - id: publish-pr
+      name: Criar Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: ${{ parameters.repositoryUrl }}
+        title: ${{ parameters.prTitle }}
+        branchName: feature/addons-update-${{ '' | now }}
+        description: |
+          ${{ steps['create-pr-description'].output.content }}
+        targetBranch: ${{ parameters.targetBranch }}
+        sourcePath: ./repo
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        reviewers: ${{ parameters.reviewers }}
+        draft: ${{ parameters.priority === 'critical' ? false : true }}
 
   output:
     links:
-      - title: Repositório no GitHub
-        url: ${{ steps['publish-repository'].output.remoteUrl }}
-      - title: Abrir no GitHub
-        url: ${{ steps['publish-repository'].output.remoteUrl }}
+      - title: Ver Pull Request
+        url: ${{ steps['publish-pr'].output.remoteUrl }}
         icon: github
     text:
-      - title: Próximos Passos
+      - title: Pull Request Criado
         content: |
-          ## Repositório GitOps Criado com Sucesso! 🎉
+          ## 🎉 Pull Request Criado com Sucesso!
 
-          Seu repositório **${{ parameters.projectName }}** foi criado com a estrutura GitOps completa na branch **${{ parameters.targetRevision }}**.
+          **PR #:** ${{ steps['publish-pr'].output.pullRequestNumber }}
+          **Status:** ${{ parameters.requiresApproval ? 'Aguardando aprovação' : 'Pronto para merge' }}
+          **Prioridade:** ${{ parameters.priority }}
 
-          ### Addons Habilitados:
-          {% if parameters.enableAwsAlbController %}
-          - ✅ AWS Load Balancer Controller
-          {% endif %}
-          {% if parameters.enableIngressNginx %}
-          - ✅ Ingress NGINX
-          {% endif %}
-          {% if parameters.enableArgoCdIngress %}
-          - ✅ ArgoCD Ingress
-          {% endif %}
-          {% if parameters.enableCrossplane %}
-          - ✅ Crossplane
-          {% endif %}
-          {% if parameters.enableKarpenter %}
-          - ✅ Karpenter
-          {% endif %}
-          {% if parameters.enableKubePrometheusStack %}
-          - ✅ Kube Prometheus Stack
-          {% endif %}
-          {% if parameters.enableMetricsServer %}
-          - ✅ Metrics Server
-          {% endif %}
+          ### 📋 Próximos Passos:
+          1. **Revisão:** Aguardar aprovação dos revisores designados
+          2. **Testes:** Executar validações automáticas (se configuradas)
+          3. **Merge:** Após aprovação, realizar merge para aplicar mudanças
+          4. **Monitoramento:** Acompanhar sincronização no ArgoCD
 
-          ### Próximos Passos:
-          1. **Clone o repositório localmente:**
-             ```bash
-             git clone ${{ steps['publish-repository'].output.remoteUrl }}
-             cd ${{ parameters.projectName }}
-             ```
-
-          2. **Configure kubeConfig:**
-             ```bash
-             aws eks update-kubeconfig --region <AWS_REGION> --name <CLUSTER_NAME>
-             ```
-
-          3. **Aplique o bootstrap inicial:**
-             ```bash
-             kubectl apply -f bootstraps/gitops-root.yaml
-             ```
-
-          ### Estrutura Criada:
-          ```
-          ${{ parameters.projectName }}/
-          ├── README.md
-          ├── bootstraps/
-          │   ├── cluster-init/
-          │   │   ├── app-argocd-projects.yaml
-          │   │   └── app-controle-plane-addons.yaml
-          │   ├── control-plane/
-          │   │   └── addons/
-          │   │       ├── aws/
-          │   │       └── oss/
-          │   └── gitops-root.yaml
-          └── environments/
-              └── default/
-                  └── addons/
-          ```
-
-          ### 📚 Documentação Adicional:
-          - [ArgoCD Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/)
-          - [GitOps Best Practices](https://www.gitops.tech/)
-          - [Kubernetes Documentation](https://kubernetes.io/docs/)
+          ### ⚠️ Importante:
+          - Este PR modifica a configuração de addons do cluster
+          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
+          - Em caso de problemas, utilize o processo de rollback documentado

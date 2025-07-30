@@ -1,9 +1,8 @@
-
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bootstrap-app-controle-plane-aws
+  name: bootstrap-gitops-app-argocd-projects
   namespace: argocd
   annotations:
     gitops.plataform/area: devops
@@ -13,8 +12,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
-    targetRevision: develop
-    path: bootstraps/control-plane/addons/aws
+    targetRevision: ${{ values.targetRevision }}
+    path: bootstraps/control-plane/argocd-config
     directory:
       recurse: true
   destination:
