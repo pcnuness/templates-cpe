@@ -32,18 +32,35 @@ spec:
           description: Selecione os add-ons desejados
 
   steps:
-    - id: fetch-base
-      name: Buscar Template Base
+    - id: fetch-template
+      name: Gerar estrutura GitOps com Addons
       action: fetch:template
       input:
-        url: ./template
+        targetPath: "."
+        url: "./templates"
         values:
           projectName: ${{ parameters.projectName }}
-          addons: ${{ parameters.addons }}
-    
-    - id: publish
-      name: Publicar no Repositório
+          owner: ${{ parameters.owner }}
+          AddonsAWS: ${{ parameters.AddonsAWS }}
+          AddonsOSS: ${{ parameters.AddonsOSS }}
+
+    - id: push-initial
+      name: Push Inicial
       action: publish:github
       input:
-        repoUrl: https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
-        repoVisibility: public
+        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
+        branch: main
+        defaultBranch: main
+        committerName: "Backstage Scaffolder"
+        committerEmail: "scaffolder@mydomain.com"
+        authorName: "Backstage Scaffolder"
+        authorEmail: "scaffolder@mydomain.com"
+        commitMessage: "Initial commit from Scaffolder"
+        files:
+          - source: "."
+            target: "/"
+
+  output:
+    links:
+      - title: Repositório GitHub
+        url: "https://github.com/${{ parameters.owner }}/${{ parameters.projectName }}"
