@@ -49,16 +49,6 @@ spec:
     #      projectName: ${{ parameters.projectName }}
     #      owner: ${{ parameters.owner }}
     #      addons: ${{ parameters.addons }}
-    - id: fetch-base
-      name: Buscar estrutura base
-      action: fetch:template
-      input:
-        url: ./templates/cluster-management
-        targetPath: .
-        values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
-
     - id: alb-controller
       name: Gerar AWS ALB Controller
       action: fetch:template
@@ -89,6 +79,16 @@ spec:
         values:
           projectName: ${{ parameters.projectName }}
 
+    - id: fetch-base
+      name: Buscar estrutura base
+      action: fetch:template
+      input:
+        url: ./templates/cluster-management
+        targetPath: .
+        values:
+          projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.owner }}
+          
     - id: push-initial
       name: Push Inicial
       action: publish:github
