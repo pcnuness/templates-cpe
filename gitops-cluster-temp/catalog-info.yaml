@@ -30,6 +30,12 @@ spec:
           description: Organização ou usuário GitHub que será proprietário do repositório
           default: sua-org
           pattern: '^[a-zA-Z0-9-_]+$'
+        targetRevision:
+          title: Nome do Branch GitOps
+          type: string
+          description: Nome da branch utilizada no monitoramento gitops
+          default: main
+          pattern: '^[a-z]+$'
     - title: Seleção de Addons
       properties:
         enableAwsAlbController:
@@ -37,6 +43,11 @@ spec:
           type: boolean
           description: Habilitar AWS Application Load Balancer Controller
           default: true
+        enableIngressNginx:
+          title: Ingress NGINX
+          type: boolean
+          description: Habilitar Ingress NGINX Controller
+          default: false
         enableArgoCdIngress:
           title: ArgoCD Ingress
           type: boolean
@@ -47,10 +58,20 @@ spec:
           type: boolean
           description: Habilitar Crossplane para gerenciamento de infraestrutura
           default: false
-        enableIngressNginx:
+        enableKarpenter:
           title: Ingress NGINX
           type: boolean
-          description: Habilitar Ingress NGINX Controller
+          description: Habilitar Karpenter
+          default: false
+        enableKubePrometheusStack:
+          title: Ingress NGINX
+          type: boolean
+          description: Habilitar Kube Prometheus Stack para Obervibilidade
+          default: false
+        enableMetricsServer:
+          title: Metrics Server
+          type: boolean
+          description: Habilitar Metrics Server para monitoramento do Kubernetes
           default: false
   steps:
     - id: fetch-base-structure
@@ -70,6 +91,16 @@ spec:
       input:
         url: ./templates/addons/aws/aws-load-balancer-controller/
         targetPath: bootstraps/control-plane/addons/aws/
+        values:
+          projectName: ${{ parameters.projectName }}
+
+    - id: fetch-ingress-nginx
+      name: Adicionar Ingress NGINX
+      if: ${{ parameters.enableIngressNginx }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/ingress-nginx/
+        targetPath: bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
 
@@ -93,15 +124,36 @@ spec:
         values:
           projectName: ${{ parameters.projectName }}
 
-    - id: fetch-ingress-nginx
-      name: Adicionar Ingress NGINX
-      if: ${{ parameters.enableIngressNginx }}
+    - id: fetch-karpenter
+      name: Adicionar Karpenter
+      if: ${{ parameters.enableKarpenter }}
       action: fetch:template
       input:
-        url: ./templates/addons/oss/ingress-nginx/
+        url: ./templates/addons/oss/karpenter/
         targetPath: bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
+
+    - id: fetch-kube-prometheus-stack
+      name: Adicionar Kube Prometheus Stack
+      if: ${{ parameters.enableKubePrometheusStack }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/karpenter/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+
+    - id: fetch-metrics-server
+      name: Adicionar Metrics Server
+      if: ${{ parameters.enableMetricsServer }}
+      action: fetch:template
+      input:
+        url: ./templates/addons/oss/karpenter/
+        targetPath: bootstraps/control-plane/addons/oss/
+        values:
+          projectName: ${{ parameters.projectName }}
+
 
     - id: publish-repository
       name: Publicar Repositório no GitHub

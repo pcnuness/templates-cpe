@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bootstrap-gitops-cluster-management
+  name: bootstrap-gitops-app-argocd-projects
   namespace: argocd
   annotations:
     gitops.plataform/area: devops
@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
     targetRevision: ${{ values.targetRevision }}
-    path: bootstraps/cluster-init
+    path: bootstraps/control-plane/argocd-config
     directory:
       recurse: true
   destination:

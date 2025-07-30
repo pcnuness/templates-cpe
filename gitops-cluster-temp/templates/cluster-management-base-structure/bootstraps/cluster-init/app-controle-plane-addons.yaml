@@ -13,7 +13,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
-    targetRevision: develop
+    targetRevision: ${{ values.targetRevision }}
     path: bootstraps/control-plane/addons
     directory:
       recurse: true
