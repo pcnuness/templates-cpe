@@ -15,19 +15,21 @@ spec:
   parameters:
     - title: Configurações do Repositório
       required:
-        - repoOwner
-        - repoName
+        - repositoryPicker
         - operation
       properties:
-        repoOwner:
-          title: Proprietário do Repositório
+        repositoryPicker:
+          title: Selecionar Repositório GitOps
           type: string
-          description: Organização ou usuário GitHub
-          pattern: '^[a-zA-Z0-9-_]+$'
-        repoName:
-          title: Nome do Repositório
-          type: string
-          description: Nome do repositório GitOps existente
+          description: Selecione o repositório GitOps existente
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - pcnuness
+              - sua-org
+              - outra-org
         operation:
           title: Operação
           type: string
@@ -130,7 +132,7 @@ spec:
       name: Clonar Repositório Existente
       action: fetch:plain
       input:
-        url: https://github.com/${{ parameters.repoOwner }}/${{ parameters.repoName }}
+        url: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
         targetPath: ./repo
 
     # STEPS PARA ADICIONAR ADDONS
@@ -142,8 +144,8 @@ spec:
         url: ./templates/addons-operations/aws/aws-load-balancer-controller/
         targetPath: ./repo/bootstraps/control-plane/addons/aws/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-ingress-nginx
       name: Adicionar Ingress NGINX
@@ -153,8 +155,8 @@ spec:
         url: ./templates/addons-operations/oss/ingress-nginx/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-argocd-ingress
       name: Adicionar ArgoCD Ingress
@@ -164,8 +166,8 @@ spec:
         url: ./templates/addons-operations/oss/argocd-ingress/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-crossplane
       name: Adicionar Crossplane
@@ -175,8 +177,8 @@ spec:
         url: ./templates/addons-operations/oss/crossplane/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-karpenter
       name: Adicionar Karpenter
@@ -186,8 +188,8 @@ spec:
         url: ./templates/addons-operations/oss/karpenter/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-kube-prometheus-stack
       name: Adicionar Kube Prometheus Stack
@@ -197,8 +199,8 @@ spec:
         url: ./templates/addons-operations/oss/kube-prometheus-stack/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     - id: fetch-metrics-server
       name: Adicionar Metrics Server
@@ -208,8 +210,8 @@ spec:
         url: ./templates/addons-operations/oss/metrics-server/
         targetPath: ./repo/bootstraps/control-plane/addons/oss/
         values:
-          projectName: ${{ parameters.repoName }}
-          repoOwner: ${{ parameters.repoOwner }}
+          projectName: ${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
+          repoOwner: ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}
 
     # STEPS PARA REMOVER ADDONS
     - id: remove-aws-alb-controller
@@ -269,23 +271,29 @@ spec:
         files:
           - ./repo/bootstraps/control-plane/addons/oss/appset-metrics-server.yaml
 
+    # GERAR TIMESTAMP PARA BRANCH
+    - id: generate-timestamp
+      name: Gerar Timestamp para Branch
+      action: debug:log
+      input:
+        message: "Gerando timestamp para branch"
+
     # PUBLICAR PR PARA PRIORIDADE CRÍTICA
     - id: publish-pr-critical
       name: Criar Pull Request (Prioridade Crítica)
       if: ${{ parameters.priority === 'critical' }}
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
+        repoUrl: ${{ parameters.repositoryPicker }}
         title: ${{ parameters.prTitle }}
-        branchName: feature/addons-update-${{ '' | now }}
+        branchName: feature/addons-update-critical
         description: |
           ## 🚨 ATUALIZAÇÃO CRÍTICA - Addons GitOps
 
           **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
           **Prioridade:** CRÍTICA 🚨
           **Solicitado via:** Backstage Scaffolder
-          **Data/Hora:** ${{ '' | now }}
-          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
+          **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
 
           ### 📦 Addons Selecionados:
           ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
@@ -324,17 +332,16 @@ spec:
       if: ${{ parameters.priority !== 'critical' }}
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?owner=${{ parameters.repoOwner }}&repo=${{ parameters.repoName }}
+        repoUrl: ${{ parameters.repositoryPicker }}
         title: ${{ parameters.prTitle }}
-        branchName: feature/addons-update-${{ '' | now }}
+        branchName: feature/addons-update-${{ parameters.operation }}-${{ parameters.priority }}
         description: |
           ## 🔄 Atualização de Addons GitOps
 
           **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
           **Prioridade:** ${{ parameters.priority }}
           **Solicitado via:** Backstage Scaffolder
-          **Data/Hora:** ${{ '' | now }}
-          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
+          **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
 
           ### 📦 Addons Selecionados:
           ${{ parameters.enableAwsAlbController ? '- ✅ AWS Load Balancer Controller' : '' }}
@@ -365,7 +372,7 @@ spec:
           ```
 
           ### 📋 Informações Técnicas:
-          - **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
+          - **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
           - **Branch Base:** ${{ parameters.targetBranch }}
           - **Revisores:** ${{ parameters.reviewers | join(', ') }}
 
@@ -389,15 +396,14 @@ spec:
         content: |
           ## 🎉 Pull Request Criado com Sucesso!
 
-          **Repositório:** ${{ parameters.repoOwner }}/${{ parameters.repoName }}
+          **Repositório:** ${{ parameters.repositoryPicker | parseRepoUrl | pick('owner') }}/${{ parameters.repositoryPicker | parseRepoUrl | pick('repo') }}
           **Prioridade:** ${{ parameters.priority }}
           **Operação:** ${{ parameters.operation === 'add' ? 'Adição' : 'Remoção' }} de addons
-          **Status:** ${{ parameters.priority === 'critical' ? 'Produção (Crítico)' : 'Draft/Revisão' }}
 
           ### 📋 Próximos Passos:
           1. **Revisão:** Aguardar aprovação dos revisores designados
-          2. **Testes:** Executar validações automáticas (se configuradas)
-          3. **Merge:** Após aprovação, realizar merge para aplicar mudanças
+          2. **Testes:** Executar validações automáticas
+          3. **Merge:** Após aprovação, realizar merge
           4. **Monitoramento:** Acompanhar sincronização no ArgoCD
 
           ### 🔧 Addons Processados:
@@ -408,13 +414,3 @@ spec:
           ${{ parameters.enableKarpenter ? '- Karpenter' : '' }}
           ${{ parameters.enableKubePrometheusStack ? '- Kube Prometheus Stack' : '' }}
           ${{ parameters.enableMetricsServer ? '- Metrics Server' : '' }}
-
-          ### ⚠️ Importante:
-          - Este PR modifica a configuração de addons do cluster
-          - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
-          - Em caso de problemas, utilize o processo de rollback documentado
-
-          ### 🔗 Links Úteis:
-          - [Documentação ArgoCD](https://argo-cd.readthedocs.io/)
-          - [Guia de Troubleshooting](https://your-docs.com/troubleshooting)
-          - [Processo de Rollback](https://your-docs.com/rollback)
