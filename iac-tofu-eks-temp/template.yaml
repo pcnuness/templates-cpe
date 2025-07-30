@@ -236,16 +236,32 @@ spec:
           - ./terraform/environments/prod.tfvars.template
           - ./.github/workflows/pipe-tofu.yaml.template
 
-    # ===== REMOVER AMBIENTES NÃO SELECIONADOS =====
-    - id: cleanup-unused-envs
-      name: 🗑️ Remover Ambientes Não Utilizados
-      if: ${{ parameters.environments | length < 3 }}
+    # ===== REMOVER AMBIENTE DEV (SE NÃO SELECIONADO) =====
+    - id: cleanup-dev-env
+      name: 🗑️ Remover Ambiente Dev (se não selecionado)
+      if: ${{ 'dev' not in parameters.environments }}
       action: fs:delete
       input:
         files:
-          - ${{ 'dev' not in parameters.environments ? './terraform/environments/dev.tfvars' : '' }}
-          - ${{ 'stage' not in parameters.environments ? './terraform/environments/stage.tfvars' : '' }}
-          - ${{ 'prod' not in parameters.environments ? './terraform/environments/prod.tfvars' : '' }}
+          - ./terraform/environments/dev.tfvars
+
+    # ===== REMOVER AMBIENTE STAGE (SE NÃO SELECIONADO) =====
+    - id: cleanup-stage-env
+      name: 🗑️ Remover Ambiente Stage (se não selecionado)
+      if: ${{ 'stage' not in parameters.environments }}
+      action: fs:delete
+      input:
+        files:
+          - ./terraform/environments/stage.tfvars
+
+    # ===== REMOVER AMBIENTE PROD (SE NÃO SELECIONADO) =====
+    - id: cleanup-prod-env
+      name: 🗑️ Remover Ambiente Prod (se não selecionado)
+      if: ${{ 'prod' not in parameters.environments }}
+      action: fs:delete
+      input:
+        files:
+          - ./terraform/environments/prod.tfvars
 
     # ===== CRIAR PULL REQUEST =====
     - id: create-pr
