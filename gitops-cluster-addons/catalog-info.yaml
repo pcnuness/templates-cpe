@@ -62,7 +62,7 @@ spec:
       action: fetch:template
       when: ${{ parameters.aws-alb-controller }}
       input:
-        url: ./templates/addons/aws-alb-controller
+        url: ./templates/addons/aws/
         targetPath: ./cluster-management/bootstraps/control-plane/addons/aws
         values:
           projectName: ${{ parameters.projectName }}
@@ -72,7 +72,7 @@ spec:
       action: fetch:template
       when: ${{ parameters.ingressNginx }}
       input:
-        url: ./templates/addons/ingress-nginx
+        url: ./templates/addons/oss/
         targetPath: ./cluster-management/bootstraps/control-plane/addons/oss
         values:
           projectName: ${{ parameters.projectName }}
