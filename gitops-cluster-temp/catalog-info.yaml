@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: provisionar-addons-gitops
-  title: Criar estrutura GitOps com Add-ons
+  name: provisionar-addons-gitops-1
+  title: Criar estrutura GitOps com Add-ons - 1
   description: Criação de estrutura GitOps com escolha de Add-ons para clusters Kubernetes
 spec:
   owner: gitops-plataform
