@@ -1,0 +1,45 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: provisionar-addons-gitops
+  title: Criar estrutura GitOps com Add-ons
+  description: Criação de estrutura GitOps com escolha de Add-ons
+spec:
+  owner: gitops-plataform
+  type: service
+
+  parameters:
+    - title: Parâmetros da estrutura
+      required:
+        - projectName
+      properties:
+        projectName:
+          title: Nome do Projeto
+          type: string
+        addons:
+          title: Add-ons a incluir
+          type: array
+          items:
+            type: string
+            enum:
+              - aws-load-balancer-controller
+              - ingress-nginx
+          uniqueItems: true
+          description: Selecione os add-ons desejados
+
+  steps:
+    - id: fetch-base
+      name: Buscar Template Base
+      action: fetch:template
+      input:
+        url: ./template
+        values:
+          projectName: ${{ parameters.projectName }}
+          addons: ${{ parameters.addons }}
+    
+    - id: publish
+      name: Publicar no Repositório
+      action: publish:github
+      input:
+        repoUrl: github.com?repo=${{ parameters.projectName }}&owner=nuageit&organization=nuageit
+        repoVisibility: public
