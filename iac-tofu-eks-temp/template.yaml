@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: opentofu-eks-autopilot
-  title: OpenTofu EKS Cluster com Pipeline Autopilot
+  name: opentofu-eks-autopilot-1
+  title: OpenTofu EKS Cluster com Pipeline Autopilot -1
   description: |
     Template para criação de clusters EKS usando OpenTofu com pipeline autopilot.
     Inclui configuração completa de infraestrutura, addons e GitOps com ArgoCD.
