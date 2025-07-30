@@ -1,9 +1,11 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: awsa
-  title: awsa
+  name: aws1
+  title: aws1
   description: Criação de estrutura GitOps com escolha de Add-ons
+  annotations:
+    backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
 spec:
   owner: gitops-plataform
   type: gitops
@@ -26,11 +28,11 @@ spec:
         aws-alb-controller:
           type: boolean
           title: Incluir AWS-Load-Balancer-Controller
-          default: false
+          default: true
         ingressNginx:
           type: boolean
           title: Incluir Ingress-Nginx
-          default: false
+          default: true
         keda:
           type: boolean
           title: Incluir KEDA
@@ -77,7 +79,7 @@ spec:
         targetPath: ./cluster-management/bootstraps/control-plane/addons/oss/
         values:
           projectName: ${{ parameters.projectName }}
-          
+
     - id: push-initial
       name: Push Inicial
       action: publish:github
@@ -92,7 +94,7 @@ spec:
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
         files:
-          - source: "./cluster-management/"
+          - source: "./cluster-management"
             target: "/"
 
   output:
