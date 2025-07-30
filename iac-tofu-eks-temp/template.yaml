@@ -334,7 +334,7 @@ spec:
         icon: github
 
       - title: 📊 Pipeline Status
-        url: ${{ steps['publish-repo'].output.remoteUrl }}/actions
+        url: https://github.com/${{ values.owner }}/${{ values.projectName }}/actions
         icon: github
 
       - title: 📋 Registrar Manualmente no Catálogo
