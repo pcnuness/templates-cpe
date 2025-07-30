@@ -28,7 +28,6 @@ spec:
           title: Nome do Repositório
           type: string
           description: Nome do repositório GitOps existente
-          pattern: '^https://github\.com/[a-zA-Z0-9-_]+/[a-zA-Z0-9-_]+$'
         operation:
           title: Operação
           type: string
