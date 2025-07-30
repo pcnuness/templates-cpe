@@ -114,6 +114,11 @@ spec:
             - Alta
             - Crítica
           default: medium
+        createDraft:
+          title: Criar como Draft
+          type: boolean
+          description: Criar PR como draft (exceto para prioridade crítica)
+          default: true
 
   steps:
     - id: fetch-repository
@@ -304,8 +309,9 @@ spec:
           kubectl delete -f <arquivo-addon-problemático>
           ```
 
-    - id: publish-pr
-      name: Criar Pull Request
+    - id: publish-pr-critical
+      name: Criar Pull Request (Prioridade Crítica)
+      if: ${{ parameters.priority === 'critical' }}
       action: publish:github:pull-request
       input:
         repoUrl: ${{ parameters.repositoryUrl }}
@@ -317,21 +323,42 @@ spec:
         sourcePath: ./repo
         token: ${{ secrets.USER_OAUTH_TOKEN }}
         reviewers: ${{ parameters.reviewers }}
-        draft: ${{ parameters.priority === 'critical' ? false : true }}
+        draft: false
+
+    - id: publish-pr-normal
+      name: Criar Pull Request (Prioridade Normal)
+      if: ${{ parameters.priority !== 'critical' }}
+      action: publish:github:pull-request
+      input:
+        repoUrl: ${{ parameters.repositoryUrl }}
+        title: ${{ parameters.prTitle }}
+        branchName: feature/addons-update-${{ '' | now }}
+        description: |
+          ${{ steps['create-pr-description'].output.content }}
+        targetBranch: ${{ parameters.targetBranch }}
+        sourcePath: ./repo
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        reviewers: ${{ parameters.reviewers }}
+        draft: ${{ parameters.createDraft }}
 
   output:
     links:
-      - title: Ver Pull Request
-        url: ${{ steps['publish-pr'].output.remoteUrl }}
+      - title: Ver Pull Request (Crítico)
+        if: ${{ parameters.priority === 'critical' }}
+        url: ${{ steps['publish-pr-critical'].output.remoteUrl }}
+        icon: github
+      - title: Ver Pull Request (Normal)
+        if: ${{ parameters.priority !== 'critical' }}
+        url: ${{ steps['publish-pr-normal'].output.remoteUrl }}
         icon: github
     text:
       - title: Pull Request Criado
         content: |
           ## 🎉 Pull Request Criado com Sucesso!
 
-          **PR #:** ${{ steps['publish-pr'].output.pullRequestNumber }}
-          **Status:** ${{ parameters.requiresApproval ? 'Aguardando aprovação' : 'Pronto para merge' }}
           **Prioridade:** ${{ parameters.priority }}
+          **Status:** ${{ parameters.requiresApproval ? 'Aguardando aprovação' : 'Pronto para merge' }}
+          **Tipo:** ${{ parameters.priority === 'critical' ? 'Produção' : 'Draft' }}
 
           ### 📋 Próximos Passos:
           1. **Revisão:** Aguardar aprovação dos revisores designados
@@ -343,3 +370,26 @@ spec:
           - Este PR modifica a configuração de addons do cluster
           - Mudanças serão aplicadas automaticamente pelo ArgoCD após o merge
           - Em caso de problemas, utilize o processo de rollback documentado
+
+          ### 🔧 Addons Selecionados:
+          {% if parameters.enableAwsAlbController %}
+          - AWS Load Balancer Controller
+          {% endif %}
+          {% if parameters.enableIngressNginx %}
+          - Ingress NGINX
+          {% endif %}
+          {% if parameters.enableArgoCdIngress %}
+          - ArgoCD Ingress
+          {% endif %}
+          {% if parameters.enableCrossplane %}
+          - Crossplane
+          {% endif %}
+          {% if parameters.enableKarpenter %}
+          - Karpenter
+          {% endif %}
+          {% if parameters.enableKubePrometheusStack %}
+          - Kube Prometheus Stack
+          {% endif %}
+          {% if parameters.enableMetricsServer %}
+          - Metrics Server
+          {% endif %}
