@@ -231,26 +231,12 @@ spec:
       name: ⚙️ Processar Pipeline
       action: fetch:template
       input:
-        url: ./skeleton/.github
-        targetPath: ./.github
+        url: ./skeleton/pipeline
+        targetPath: ./.github/workflow
         values:
           projectName: ${{ parameters.projectName }}
           environments: ${{ parameters.environments }}
           awsRegion: ${{ parameters.awsRegion }}
-
-    # ===== CRIAR README =====
-    - id: create-readme
-      name: 📖 Criar README
-      action: fetch:template
-      input:
-        url: ./skeleton/README.md.template
-        targetPath: ./README.md
-        values:
-          projectName: ${{ parameters.projectName }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
-          environments: ${{ parameters.environments }}
-          enabledAddons: ${{ parameters.enabledAddons }}
 
     # ===== REMOVER TEMPLATES PROCESSADOS =====
     - id: cleanup-templates
@@ -259,7 +245,6 @@ spec:
       input:
         files:
           - ./catalog-info.yaml.template
-          - ./README.md.template
           - ./terraform/blueprint_addons.tf.template
           - ./terraform/environments/dev.tfvars.template
           - ./terraform/environments/stage.tfvars.template
