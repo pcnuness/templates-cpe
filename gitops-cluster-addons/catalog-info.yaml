@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws2
-  title: aws2
+  name: aws3
+  title: aws3
   description: Criação de estrutura GitOps com escolha de Add-ons
   annotations:
     backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
