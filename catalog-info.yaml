@@ -6,6 +6,6 @@ metadata:
 spec:
   type: url
   targets:
-    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml?nocache=1"
+    - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-repo/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-management/catalog-info.yaml"
     - "https://github.com/pcnuness/templates-cpe/blob/main/gitops-cluster-addons/catalog-info.yaml"
