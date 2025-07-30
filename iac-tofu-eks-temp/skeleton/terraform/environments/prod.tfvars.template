@@ -1,0 +1,22 @@
+# ==================================================================
+# CONFIGURAÇÕES AMBIENTE PROD - ${{ values.projectName }}
+# ==================================================================
+
+# Configurações Básicas
+name        = "${{ values.projectName }}-prod"
+eks_name    = "${{ values.projectName }}-prod-eks"
+eks_version = "${{ values.clusterVersion }}"
+region      = "${{ values.awsRegion }}"
+
+# Configurações de Rede
+vpc_cidr = "10.2.0.0/16"
+
+# Tags do Ambiente
+tags = {
+  Environment = "prod"
+  Project     = "${{ values.projectName }}"
+  ManagedBy   = "backstage-opentofu"
+  Owner       = "${{ values.owner }}"
+  Repository  = "${{ values.repoName }}"
+  CreatedAt   = "${{ '' | now }}"
+}
