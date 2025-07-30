@@ -94,7 +94,7 @@ spec:
         authorEmail: "scaffolder@mydomain.com"
         commitMessage: "Initial commit from Scaffolder"
         files:
-          - source: "./cluster-management"
+          - source: "./cluster-management/"
             target: "/"
 
   output:
