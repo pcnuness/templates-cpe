@@ -263,58 +263,56 @@ spec:
         files:
           - ./terraform/environments/prod.tfvars
 
-    # ===== CRIAR PULL REQUEST =====
-    - id: create-pr
-      name: 📤 Criar Pull Request
-      action: publish:github:pull-request
+    # ===== CRIAR REPOSITÓRIO =====
+    - id: publish-repo
+      name: 📦 Criar Repositório
+      action: publish:github
       input:
         repoUrl: ${{ parameters.repoUrl }}
-        title: '🚀 feat: Adicionar infraestrutura OpenTofu para ${{ parameters.projectName }}'
-        branchName: 'feat/opentofu-${{ parameters.projectName }}-${{ '' | now }}'
-        description: |
-          ## 🏗️ Nova Infraestrutura OpenTofu - ${{ parameters.projectName }}
+        description: 'Infraestrutura EKS para ${{ parameters.projectName }} usando OpenTofu'
+        homepage: https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}
+        topics:
+          - opentofu
+          - terraform
+          - eks
+          - kubernetes
+          - aws
+          - infrastructure
+          - ${{ parameters.projectName }}
+        access: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
+        defaultBranch: main
+        gitCommitMessage: |
+          🚀 Initial commit: OpenTofu EKS Infrastructure for ${{ parameters.projectName }}
           
-          **Solicitado via:** Backstage Scaffolder  
-          **Prioridade:** ${{ parameters.priority | upper }}  
-          **Região AWS:** ${{ parameters.awsRegion }}  
-          **Ambientes:** ${{ parameters.environments | join(', ') }}
+          - Configuração completa de cluster EKS
+          - Pipeline autopilot com GitHub Actions
+          - Suporte a múltiplos ambientes: ${{ parameters.environments | join(', ') }}
+          - Região: ${{ parameters.awsRegion }}
+          - Kubernetes: v${{ parameters.clusterVersion }}
           
-          ### 📋 Configurações do Cluster:
-          - **Versão Kubernetes:** ${{ parameters.clusterVersion }}
-          - **Addons:** ${{ parameters.enabledAddons | join(', ') }}
-          
-          ### ✅ Checklist de Revisão:
-          - [ ] Validar configurações de rede e segurança
-          - [ ] Revisar addons necessários
-          - [ ] Confirmar configurações de ambiente
-          - [ ] Validar pipeline de CI/CD
-          
-          ### 🚀 Próximos Passos:
-          1. **Revisar e aprovar** este PR
-          2. **Executar pipeline** para aplicar a infraestrutura
-          3. **Configurar aplicações** no ArgoCD (se habilitado)
-          4. **Validar conectividade** e funcionalidades do cluster
-          
-          ### ⚠️ Importante:
-          - Este PR criará recursos AWS que podem gerar custos
-          - Certifique-se de que as permissões IAM estão configuradas
-          
-          ---
-          
-          **Criado em:** ${{ '' | now }}
-        draft: ${{ parameters.createDraft }}
-        sourcePath: .
-        targetPath: .
+          Criado via Backstage Scaffolder
+
+    # ===== REGISTRAR NO CATÁLOGO =====
+    - id: register-catalog
+      name: 📋 Registrar no Catálogo
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-repo'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
 
   output:
     links:
-      - title: 📋 Ver Pull Request
-        url: ${{ steps['create-pr'].output.remoteUrl }}
+      - title: 📦 Ver Repositório
+        url: ${{ steps['publish-repo'].output.remoteUrl }}
         icon: github
 
       - title: 📊 Pipeline Status
-        url: ${{ parameters.repoUrl | parseRepoUrl | pick('host') }}/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}/actions
+        url: ${{ steps['publish-repo'].output.remoteUrl }}/actions
         icon: github
+
+      - title: 📋 Ver no Catálogo
+        url: ${{ steps['register-catalog'].output.catalogInfoUrl }}
+        icon: catalog
 
       - title: 📖 OpenTofu Documentation
         url: https://opentofu.org/docs/
@@ -329,14 +327,19 @@ spec:
         content: |
           ## ✅ Próximos Passos:
           
-          ### 1. 📋 Revisar Pull Request
-          - Acesse o PR criado e revise as configurações
-          - Verifique se todos os ambientes estão corretos
+          ### 1. 📦 Repositório Criado
+          - Acesse o repositório criado no GitHub
+          - Verifique se todos os arquivos estão corretos
           
           ### 2. 🚀 Executar Pipeline
-          - Após aprovação, a pipeline será executada automaticamente
-          - Monitore o progresso na aba Actions do GitHub
-          - A infraestrutura será criada na região **${{ parameters.awsRegion }}**
+          - Vá para a aba Actions do repositório
+          - Execute a pipeline manualmente para o ambiente desejado
+          - Monitore o progresso da criação da infraestrutura
+          
+          ### 3. 🔧 Configurações Pós-Deploy
+          - Configure kubectl: `aws eks update-kubeconfig --region ${{ parameters.awsRegion }} --name ${{ parameters.projectName }}-eks`
+          - Valide conectividade com o cluster
+          - Configure aplicações no ArgoCD (se habilitado)
           
           ### 📊 Resumo da Configuração:
           - **Projeto:** ${{ parameters.projectName }}
@@ -344,3 +347,6 @@ spec:
           - **Região:** ${{ parameters.awsRegion }}
           - **Kubernetes:** v${{ parameters.clusterVersion }}
           - **Addons:** ${{ parameters.enabledAddons | length }} habilitados
+          
+          ### 🆘 Suporte:
+          Em caso de dúvidas ou problemas, consulte a documentação ou entre em contato com a equipe de platform.
