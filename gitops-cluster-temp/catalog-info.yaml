@@ -169,8 +169,7 @@ spec:
         allowedHosts: ['github.com']
         description: Repositório GitOps para gerenciamento de cluster Kubernetes gerado pelo Backstage
         repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
-        branch: ${{ parameters.targetRevision }}
-        defaultBranch: main
+        defaultBranch: ${{ parameters.targetRevision }}
         gitCommitMessage: Initial commit from Backstage Scaffolder
         gitAuthorName: Backstage Scaffolder
         gitAuthorEmail: scaffolder@backstage.io
