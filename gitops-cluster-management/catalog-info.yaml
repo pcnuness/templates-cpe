@@ -41,8 +41,7 @@ spec:
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
-          AddonsAWS: ${{ parameters.AddonsAWS }}
-          AddonsOSS: ${{ parameters.AddonsOSS }}
+          addons: ${{ parameters.addons }}
 
     - id: push-initial
       name: Push Inicial
