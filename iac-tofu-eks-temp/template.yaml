@@ -232,7 +232,7 @@ spec:
       action: fetch:template
       input:
         url: ./skeleton/pipeline
-        targetPath: ./.github/workflow
+        targetPath: ./.github/workflows
         values:
           projectName: ${{ parameters.projectName }}
           environments: ${{ parameters.environments }}
