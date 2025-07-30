@@ -1,0 +1,103 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: gitops-cluster-addons
+  title: GitOps Cluster Addons Catalog
+  description: Template para criar repositório inicial com addons Kubernetes GitOps
+spec:
+  owner: user:guest
+  type: service
+  parameters:
+    - title: Informações Básicas
+      properties:
+        repoName:
+          type: string
+          title: Nome do Repositório
+    - title: Selecione Addons
+      type: object
+      properties:
+        ingressNginx:
+          type: boolean
+          title: Incluir Ingress-NGINX
+          default: true
+        crossplane:
+          type: boolean
+          title: Incluir Crossplane
+          default: false
+        keda:
+          type: boolean
+          title: Incluir KEDA
+          default: false
+  steps:
+    - id: fetch-base
+      name: Fetch Base Template
+      action: fetch:template
+      input:
+        url: ./templates
+        values:
+          repoName: ${{ parameters.repoName }}
+    - id: generate-addons
+      name: Gerar Addons Condicionais
+      action: roadiehq:utils:fs:write
+      input:
+        path: templates/bootstraps/control-plane/addons/oss/appset-crossplane.yaml
+        content: |  # Conteúdo gerado só se selecionado
+          ${{ if parameters.crossplane }}  # Lógica condicional
+          apiVersion: argoproj.io/v1alpha1
+          kind: ApplicationSet
+          metadata:
+            name: crossplane
+          spec:
+            generators:
+              - git:
+                  repoURL: https://github.com/pcnuness/templates-cpe
+                  revision: main
+            template:
+              metadata:
+                name: '{{ .name }}'
+              spec:
+                project: default
+                source:
+                  repoURL: https://charts.crossplane.io/stable
+                  chart: crossplane
+                  targetRevision: "*"
+                destination:
+                  server: https://kubernetes.default.svc
+                syncPolicy:
+                  automated: {}
+          ${{ endif }}
+    # Adicione steps semelhantes para outros addons
+    - id: generate-keda-addons
+      name: Gerar Addons keda
+      action: roadiehq:utils:fs:write
+      input:
+        path: templates/bootstraps/control-plane/addons/oss/appset-keda-controller.yaml
+        content: |  # Conteúdo gerado só se selecionado
+          ${{ if parameters.keda }}  # Lógica condicional
+          apiVersion: argoproj.io/v1alpha1
+          kind: ApplicationSet
+          metadata:
+            name: keda
+          spec:
+            generators:
+              - git:
+                  repoURL: https://github.com/pcnuness/templates-cpe
+                  revision: main
+            template:
+              metadata:
+                name: '{{ .name }}'
+              spec:
+                project: default
+                source:
+                  repoURL: https://charts.keda.io/stable
+                  chart: crossplane
+                  targetRevision: "*"
+                destination:
+                  server: https://kubernetes.default.svc
+                syncPolicy:
+                  automated: {}
+          ${{ endif }}
+  output:
+    links:
+      - title: Ver Repositório Gerado
+        url: https://github.com/${{ parameters.repoName }}
