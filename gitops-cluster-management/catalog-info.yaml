@@ -1,12 +1,12 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: provisionar-addons-gitops
-  title: Criar estrutura GitOps com Add-ons
-  description: Criação de estrutura GitOps com escolha de Add-ons
+  name: provisionar-addons-snik
+  title: Criar estrutura GitOps com Add-ons - snik
+  description: Criação de estrutura GitOps com escolha de Add-ons snik
 spec:
   owner: gitops-plataform
-  type: service
+  type: gitops
 
   parameters:
     - title: Parâmetros da estrutura

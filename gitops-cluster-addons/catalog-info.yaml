@@ -2,13 +2,13 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: gitops-cluster-addons
-  title: Criar estrutura GitOps com Add-ons
+  title: Repoitorio GitOps customizado com Add-ons
   description: Criação de estrutura GitOps com escolha de Add-ons
   annotations:
     backstage.io/managed-by-location: https://github.com/pcnuness/templates-cpe/blob/main/catalog-info.yaml
 spec:
   owner: gitops-plataform
-  type: service
+  type: gitops
 
   parameters:
     - title: Parâmetros da estrutura

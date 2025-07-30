@@ -2,7 +2,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: gitops-cluster-default
-  title: Repositório GitOps Default
+  title: Repositório GitOps
   description: Cria repositório GitOps com estrutura default de gerenciamento (AWS ALB Controller and Ingress-Nginx)
   tags:
     - gitops

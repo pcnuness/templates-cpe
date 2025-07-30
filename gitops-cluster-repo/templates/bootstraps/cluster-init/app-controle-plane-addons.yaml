@@ -3,7 +3,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bootstrap-app-controle-plane-oss
+  name: bootstrap-app-controle-plane-addons
   namespace: argocd
   annotations:
     gitops.plataform/area: devops
@@ -14,7 +14,7 @@ spec:
   source:
     repoURL: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
     targetRevision: develop
-    path: bootstraps/control-plane/addons/oss
+    path: bootstraps/control-plane/addons
     directory:
       recurse: true
   destination:
