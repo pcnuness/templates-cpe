@@ -184,7 +184,7 @@ spec:
       name: 📦 Criar Repositório
       action: publish:github
       input:
-        repoUrl: ${{ parameters.repoUrl }}
+        repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
         description: 'Infraestrutura EKS para ${{ parameters.projectName }} usando OpenTofu'
         homepage: https://github.com/${{ values.owner }}/${{ values.projectName }}
         topics:
@@ -195,8 +195,10 @@ spec:
           - aws
           - infrastructure
           - ${{ parameters.projectName }}
-        access: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
         defaultBranch: main
+        gitAuthorName: Backstage Scaffolder
+        gitAuthorEmail: scaffolder@backstage.io
+        repoVisibility: public
         gitCommitMessage: |
           🚀 Initial commit: OpenTofu EKS Infrastructure for ${{ parameters.projectName }}
           
