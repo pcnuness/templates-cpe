@@ -36,7 +36,6 @@ spec:
         - owner
         - awsRegion
         - environments
-        - clusterVersion
       properties:
         projectName:
           title: Nome do Repositório
@@ -86,6 +85,8 @@ spec:
 
     # ===== CONFIGURAÇÕES DO CLUSTER EKS =====
     - title: ⚙️ Configurações do Cluster EKS
+      required:
+        - clusterVersion
       properties:
         clusterVersion:
           title: Versão do Kubernetes
