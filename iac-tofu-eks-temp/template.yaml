@@ -33,7 +33,7 @@ spec:
     - title: 🏗️ Configurações Principais
       required:
         - projectName
-        - repoUrl
+        - owner
         - awsRegion
         - environments
       properties:
