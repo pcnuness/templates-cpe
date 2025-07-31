@@ -38,22 +38,17 @@ spec:
         - environments
       properties:
         projectName:
-          title: Nome do Projeto
+          title: Nome do Repositório
           type: string
-          description: Nome do projeto (usado para prefixos de recursos)
-          pattern: '^[a-z][a-z0-9-]*[a-z0-9]$'
-          maxLength: 20
-          ui:autofocus: true
-          ui:help: 'Apenas letras minúsculas, números e hífens. Deve começar com letra.'
-
-        repoUrl:
-          title: Repositório de Destino
+          description: Nome do repositório a ser criado
+          default: meu-cluster-gitops
+          pattern: '^[a-zA-Z0-9-_]+$'
+        owner:
+          title: Organização ou Usuário GitHub
           type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-          description: Repositório onde o código será criado
+          description: Organização ou usuário GitHub que será proprietário do repositório
+          default: sua-org
+          pattern: '^[a-zA-Z0-9-_]+$'
 
         awsRegion:
           title: Região AWS
@@ -174,6 +169,7 @@ spec:
         message: |
           Validando configurações:
           - Projeto: ${{ parameters.projectName }}
+          - Owner: ${{ parameters.owner }}
           - Região: ${{ parameters.awsRegion }}
           - Ambientes: ${{ parameters.environments | join(', ') }}
           - Cluster Version: ${{ parameters.clusterVersion }}
@@ -186,9 +182,9 @@ spec:
         url: ./templates/terraform/
         targetPath: ./
         values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
-
+          projectName: ${{ parameters.projectName }} https://github.com/${{ values.owner }}/${{ values.projectName }}.git
+          owner: ${{ parameters.owner }}
+ 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
       name: 📦 Criar Repositório
@@ -196,7 +192,7 @@ spec:
       input:
         repoUrl: ${{ parameters.repoUrl }}
         description: 'Infraestrutura EKS para ${{ parameters.projectName }} usando OpenTofu'
-        homepage: https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}
+        homepage: https://github.com/${{ values.owner }}/${{ values.projectName }}
         topics:
           - opentofu
           - terraform
@@ -225,7 +221,7 @@ spec:
       input:
         message: |
           ⏳ Aguardando propagação do repositório no GitHub...
-          Repositório: ${{ steps['publish-repo'].output.remoteUrl }}
+          Repositório: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
           
           Aguardando 10 segundos para garantir que os arquivos estejam disponíveis via API...
 
@@ -241,11 +237,11 @@ spec:
   output:
     links:
       - title: 📦 Ver Repositório
-        url: ${{ steps['publish-repo'].output.remoteUrl }}
+        url: https://github.com/${{ values.owner }}/${{ values.projectName }}
         icon: github
 
       - title: 📊 Pipeline Status
-        url: https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}/actions
+        url: https://github.com/${{ values.owner }}/${{ values.projectName }}/actions
         icon: github
 
       - title: 📋 Registrar Manualmente no Catálogo
