@@ -47,7 +47,7 @@ spec:
           title: Organização ou Usuário GitHub
           type: string
           description: Organização ou usuário GitHub que será proprietário do repositório
-          default: sua-org
+          default: pcnuness
           pattern: '^[a-zA-Z0-9-_]+$'
 
         awsRegion:
