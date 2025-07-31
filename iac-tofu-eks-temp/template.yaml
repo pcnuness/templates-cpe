@@ -151,8 +151,8 @@ spec:
       name: 📁 Criar Estrutura Base do Projeto
       action: fetch:template
       input:
-        url: ./skeleton/
-        targetPath: ./
+        url: ./templates/terraform
+        targetPath: ./terraform/
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
@@ -167,6 +167,48 @@ spec:
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
+
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-prod
+      name: 🌍 Criar Configurações por Ambiente
+      action: fetch:template
+      if: ${{ parameters.environments.enabledProd }}
+      input:
+        url: ./skeleton/environments/prod.tfvars
+        targetPath: ./terraform/environments/prod.tfvars
+        values:
+          projectName: ${{ parameters.projectName }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledProd: ${{ parameters.environments.enabledProd }}
+    
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-stage
+      name: 🌍 Criar Configurações por Ambiente
+      action: fetch:template
+      if: ${{ parameters.environments.enabledStage }}
+      input:
+        url: ./skeleton/environments/stage.tfvars
+        targetPath: ./terraform/environments/stage.tfvars
+        values:
+          projectName: ${{ parameters.projectName }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledStage: ${{ parameters.environments.enabledStage }}
+    
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-configs
+      name: 🌍 Criar Configurações por Ambiente
+      action: fetch:template
+      if: ${{ parameters.environments.enabledDev }}
+      input:
+        url: ./skeleton/environments/dev.tfvars
+        targetPath: ./terraform/environments/dev.tfvars
+        values:
+          projectName: ${{ parameters.projectName }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledDev: ${{ parameters.environments.enabledDev }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
