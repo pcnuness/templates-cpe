@@ -35,7 +35,6 @@ spec:
         - projectName
         - owner
         - awsRegion
-        - environments
       properties:
         projectName:
           title: Nome do Repositório
@@ -43,6 +42,7 @@ spec:
           description: Nome do repositório a ser criado
           default: meu-cluster-gitops
           pattern: '^[a-zA-Z0-9-_]+$'
+        
         owner:
           title: Organização ou Usuário GitHub
           type: string
@@ -68,23 +68,27 @@ spec:
             - 'Europe (Frankfurt)'
             - 'Asia Pacific (Singapore)'
 
+    # ===== CONFIGURAÇÕES DE AMBIENTES =====
+    - title: 🌍 Configurações de Ambientes
+      properties:
         environments:
           title: Selecione os ambientes que serão configurados
+          type: object
           properties:
             enabledDev:
-              title: Ambiente Develop
+              title: Ambiente Development
               type: boolean
-              description: Habilitar Develop
+              description: Habilitar ambiente de desenvolvimento
               default: true
             enabledStage:
-              title: Ambiente Stage
+              title: Ambiente Staging
               type: boolean
-              description: Habilitar Stage
+              description: Habilitar ambiente de staging
               default: false
             enabledProd:
               title: Ambiente Production
               type: boolean
-              description: Habilitar Production
+              description: Habilitar ambiente de produção
               default: false
 
     # ===== CONFIGURAÇÕES DO CLUSTER EKS =====
@@ -124,7 +128,7 @@ spec:
         enabledEbsCsiDriver:
           title: Addon AWS EBS CSI Driver
           type: boolean
-          description: Habilitar WS EBS CSI Driver
+          description: Habilitar AWS EBS CSI Driver
           default: false
 
     # ===== CONFIGURAÇÕES DE GOVERNANÇA =====
@@ -173,26 +177,14 @@ spec:
           - Região: ${{ parameters.awsRegion }}
           - Cluster Version: ${{ parameters.clusterVersion }}
           - Ambientes:
-              ${{ parameters.enabledProd}}
-              ${{ parameters.enabledStage }}
-              ${{ parameters.enabledDev }}
+              Dev: ${{ parameters.environments.enabledDev }}
+              Stage: ${{ parameters.environments.enabledStage }}
+              Prod: ${{ parameters.environments.enabledProd }}
           - Addons: 
-              ${{ parameters.enabledCoreDns }}
-              ${{ parameters.enabledKubeProxy }} 
-              {{ parameters.enabledPodIdentityAgent }}
-              ${{ parameters.enabledEbsCsiDriver }}
-        values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
-          enabledProd: ${{ parameters.enabledProd }}
-          enabledStage: ${{ parameters.enabledStage }}
-          enabledDev: ${{ parameters.enabledDev }}
-          enabledCoreDns: ${{ parameters.enabledCoreDns }}
-          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
-          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
-          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
+              CoreDNS: ${{ parameters.enabledCoreDns }}
+              KubeProxy: ${{ parameters.enabledKubeProxy }}
+              PodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
+              EbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
     # ===== FETCH ARQUIVOS ESTÁTICOS =====
     - id: fetch-base-structure
@@ -206,11 +198,30 @@ spec:
           owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
-          environments: ${{ parameters.environments }}
+          # Ambientes
+          enabledDev: ${{ parameters.environments.enabledDev }}
+          enabledStage: ${{ parameters.environments.enabledStage }}
+          enabledProd: ${{ parameters.environments.enabledProd }}
+          # Addons
           enabledCoreDns: ${{ parameters.enabledCoreDns }}
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
+
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-configs
+      name: 🌍 Criar Configurações por Ambiente
+      action: fetch:template
+      input:
+        url: ./templates/environments/
+        targetPath: ./terraform/environments
+        values:
+          projectName: ${{ parameters.projectName }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledDev: ${{ parameters.environments.enabledDev }}
+          enabledStage: ${{ parameters.environments.enabledStage }}
+          enabledProd: ${{ parameters.environments.enabledProd }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
@@ -234,10 +245,10 @@ spec:
         repoVisibility: public
         gitCommitMessage: |
           🚀 Initial commit: OpenTofu EKS Infrastructure for ${{ parameters.projectName }}
-
+          
           - Configuração completa de cluster EKS
           - Pipeline autopilot com GitHub Actions
-          - Suporte a múltiplos ambientes: ${{ parameters.environments | join(', ') }}
+          - Suporte a múltiplos ambientes
           - Região: ${{ parameters.awsRegion }}
           - Kubernetes: v${{ parameters.clusterVersion }}
           
@@ -290,14 +301,14 @@ spec:
         content: |
           ## ✅ Repositório Criado:
           
-          **Repositório:** https://github.com/${{ values.owner }}/${{ values.projectName }}/actions
+          **Repositório:** https://github.com/${{ values.owner }}/${{ values.projectName }}
           
           ## 📋 Registro no Catálogo:
           
           Se o registro automático falhou, você pode registrar manualmente:
           
           1. **Acesse:** [Catalog Import](/catalog-import)
-          2. **Cole a URL:** `https://github.com/${{ values.owner }}/${{ values.projectName }}/actions/blob/main/catalog-info.yaml`
+          2. **Cole a URL:** `https://github.com/${{ values.owner }}/${{ values.projectName }}/blob/main/catalog-info.yaml`
           3. **Clique em:** "Analyze"
           4. **Confirme:** "Import"
           
@@ -322,8 +333,17 @@ spec:
           
           ## 📊 Resumo da Configuração:
           - **Projeto:** ${{ parameters.projectName }}
-          - **Ambientes:** ${{ parameters.environments | join(', ') }}
           - **Região:** ${{ parameters.awsRegion }}
           - **Kubernetes:** v${{ parameters.clusterVersion }}
+          - **Ambientes Habilitados:**
+            - Development: ${{ parameters.environments.enabledDev }}
+            - Staging: ${{ parameters.environments.enabledStage }}
+            - Production: ${{ parameters.environments.enabledProd }}
+          - **Addons Habilitados:**
+            - CoreDNS: ${{ parameters.enabledCoreDns }}
+            - Kube-Proxy: ${{ parameters.enabledKubeProxy }}
+            - Pod Identity Agent: ${{ parameters.enabledPodIdentityAgent }}
+            - EBS CSI Driver: ${{ parameters.enabledEbsCsiDriver }}
+          
           ## 🆘 Suporte:
           Em caso de dúvidas ou problemas, consulte a documentação ou entre em contato com a equipe de platform.
