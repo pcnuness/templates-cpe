@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: opentofu-eks-autopilot-4
-  title: OpenTofu EKS Cluster com Pipeline Autopilot -4
+  name: opentofu-eks-autopilot-6
+  title: OpenTofu EKS Cluster com Pipeline Autopilot -6
   description: |
     Template para criação de clusters EKS usando OpenTofu com pipeline autopilot.
     Suporta múltiplos ambientes (dev, stage, prod) com tfvars específicos.
@@ -187,6 +187,38 @@ spec:
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
  
+- id: generate-tfvars
+  name: Gerar arquivos tfvars por ambiente
+  action: create:files
+  input:
+    files:
+      {% for env in parameters.environments %}
+      - path: terraform/environments/{{ env }}.tfvars
+        content: |
+          # ==================================================================
+          # CONFIGURAÇÕES AMBIENTE DEV - ${{ values.projectName }}
+          # ==================================================================
+          
+          # Configurações Básicas
+          name        = "${{ values.projectName }}-dev"
+          eks_name    = "${{ values.projectName }}-dev-eks"
+          eks_version = "${{ values.clusterVersion }}"
+          region      = "${{ values.awsRegion }}"
+          
+          # Configurações de Rede
+          vpc_cidr = "10.0.0.0/16"
+          
+          # Tags do Ambiente
+          tags = {
+            Environment = "dev"
+            Project     = "${{ values.projectName }}"
+            ManagedBy   = "backstage-opentofu"
+            Owner       = "${{ values.owner }}"
+            Repository  = "${{ values.repoName }}"
+            CreatedAt   = "${{ '' | now }}"
+          }
+      {% endfor %}
+
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
       name: 📦 Criar Repositório
