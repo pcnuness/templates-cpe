@@ -171,8 +171,23 @@ spec:
           - Projeto: ${{ parameters.projectName }}
           - Owner: ${{ parameters.owner }}
           - Região: ${{ parameters.awsRegion }}
-          - Ambientes: ${{ parameters.environments | join(', ') }}
+          - Ambientes: ${{ parameters.environments }}
           - Cluster Version: ${{ parameters.clusterVersion }}
+          - Addons: 
+              ${{ parameters.enabledCoreDns }}
+              ${{ parameters.enabledKubeProxy }} 
+              {{ parameters.enabledPodIdentityAgent }}
+              ${{ parameters.enabledEbsCsiDriver }}
+        values:
+          projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.owner }}
+          awsRegion: ${{ parameters.awsRegion }}
+          environments: ${{ parameters.environments }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledCoreDns: ${{ parameters.enabledCoreDns }}
+          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
+          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
+          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
     # ===== FETCH ARQUIVOS ESTÁTICOS =====
     - id: fetch-base-structure
