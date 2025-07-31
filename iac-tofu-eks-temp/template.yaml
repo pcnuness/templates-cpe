@@ -171,8 +171,11 @@ spec:
           - Projeto: ${{ parameters.projectName }}
           - Owner: ${{ parameters.owner }}
           - Região: ${{ parameters.awsRegion }}
-          - Ambientes: ${{ parameters.environments }}
           - Cluster Version: ${{ parameters.clusterVersion }}
+          - Ambientes:
+              ${{ parameters.enabledProd}}
+              ${{ parameters.enabledStage }}
+              ${{ parameters.enabledDev }}
           - Addons: 
               ${{ parameters.enabledCoreDns }}
               ${{ parameters.enabledKubeProxy }} 
@@ -182,8 +185,10 @@ spec:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
-          environments: ${{ parameters.environments }}
           clusterVersion: ${{ parameters.clusterVersion }}
+          enabledProd: ${{ parameters.enabledProd }}
+          enabledProd: ${{ parameters.enabledStage }}
+          enabledProd: ${{ parameters.enabledDev }}
           enabledCoreDns: ${{ parameters.enabledCoreDns }}
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
@@ -201,11 +206,11 @@ spec:
           owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
+          environments: ${{ parameters.environments }}
           enabledCoreDns: ${{ parameters.enabledCoreDns }}
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
-          environments: ${{ parameters.environments }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
