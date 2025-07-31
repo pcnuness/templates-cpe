@@ -1,3 +1,4 @@
+{#- Template para configuração de addons EKS -#}
 module "eks_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
   version = "~> 1.21"
@@ -8,7 +9,7 @@ module "eks_addons" {
   oidc_provider_arn = local.oidc_provider_arn
 
   eks_addons = {
-{% if parameters.enabledCoreDns %}
+{%- if values.enabledCoreDns %}
     # ==================================================================
     # FOUNDATION NETWORKING - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
@@ -16,14 +17,14 @@ module "eks_addons" {
       addon_version        = local.aws_eks.cluster_addon_versions.coredns
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/coredns.yaml")))
     }
-{% endif %}
-{% if parameters.enabledKubeProxy %}
+{%- endif %}
+{%- if values.enabledKubeProxy %}
     kube-proxy = {
       addon_version        = local.aws_eks.cluster_addon_versions.kube_proxy
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/kube-proxy.yaml")))
     }
-{% endif %}
-{% if parameters.enabledPodIdentityAgent %}
+{%- endif %}
+{%- if values.enabledPodIdentityAgent %}
     # ==================================================================
     # FOUNDATION SECURITY - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
@@ -31,8 +32,8 @@ module "eks_addons" {
       addon_version        = local.aws_eks.cluster_addon_versions.eks_pod_identity_agent
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/eks-pod-identity-agent.yaml")))
     }
-{% endif %}
-{% if parameters.enabledEbsCsiDriver %}
+{%- endif %}
+{%- if values.enabledEbsCsiDriver %}
     # ==================================================================
     # FOUNDATION STORAGE - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
@@ -41,7 +42,7 @@ module "eks_addons" {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
       configuration_values     = jsonencode(yamldecode(file("${path.root}/values/aws-ebs-csi-driver.yaml")))
     }
-{% endif %}
+{%- endif %}
   }
 
   depends_on = [module.eks]
