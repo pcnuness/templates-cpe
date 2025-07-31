@@ -178,8 +178,14 @@ spec:
         url: ./templates/terraform/
         targetPath: ./terraform
         values:
-          projectName: ${{ parameters.projectName }} https://github.com/${{ values.owner }}/${{ values.projectName }}.git
+          projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledCoreDns: ${{ parameters.enabledCoreDns }}
+          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
+          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
+          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
  
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
