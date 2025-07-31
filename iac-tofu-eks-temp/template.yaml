@@ -1,11 +1,10 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: opentofu-eks-autopilot-1
-  title: OpenTofu EKS Cluster com Pipeline Autopilot -1
+  name: opentofu-eks-autopilot-2
+  title: OpenTofu EKS Cluster com Pipeline Autopilot -2
   description: |
     Template para criação de clusters EKS usando OpenTofu com pipeline autopilot.
-    Inclui configuração completa de infraestrutura, addons e GitOps com ArgoCD.
     Suporta múltiplos ambientes (dev, stage, prod) com tfvars específicos.
   tags:
     - opentofu
@@ -96,12 +95,12 @@ spec:
           title: Versão do Kubernetes
           type: string
           description: Versão do Kubernetes para o cluster EKS
-          default: "1.28"
+          default: "1.31"
           enum:
-            - "1.26"
-            - "1.27"
-            - "1.28"
             - "1.29"
+            - "1.30"
+            - "1.31"
+            - "1.32"
 
     # ===== ADDONS E COMPONENTES =====
     - title: 🔧 Addons e Componentes
@@ -180,76 +179,17 @@ spec:
           - Cluster Version: ${{ parameters.clusterVersion }}
 
     # ===== FETCH ARQUIVOS ESTÁTICOS =====
-    - id: fetch-static
-      name: 📥 Buscar Arquivos Base
-      action: fetch:plain
-      input:
-        url: ./skeleton/terraform
-        targetPath: ./
-
-    # ===== PROCESSAR CATALOG-INFO =====
-    - id: process-catalog-info
-      name: 📋 Processar Catalog Info
+    - id: fetch-base-structure
+      name: Buscar Estrutura Base
       action: fetch:template
       input:
-        url: ./skeleton/catalog-info.yaml.template
-        targetPath: ./catalog-info.yaml
-        values:
-          projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
-          repoName: ${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}
-          awsRegion: ${{ parameters.awsRegion }}
-          environments: ${{ parameters.environments }}
-
-    # ===== PROCESSAR TEMPLATES DINÂMICOS =====
-    - id: process-tfvars
-      name: 🛠️ Processar Arquivos TFVars
-      action: fetch:template
-      input:
-        url: ./skeleton/terraform/environments
-        targetPath: ./terraform/environments
-        values:
-          projectName: ${{ parameters.projectName }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
-          owner: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
-          repoName: ${{ parameters.repoUrl | parseRepoUrl | pick('repo') }}
-          environments: ${{ parameters.environments }}
-
-    # ===== PROCESSAR BLUEPRINT ADDONS =====
-    - id: process-addons
-      name: 🔧 Processar Blueprint Addons
-      action: fetch:template
-      input:
-        url: ./skeleton/terraform/blueprint_addons.tf.template
+        url: ./templates/terraform
         targetPath: ./terraform
         values:
-          enabledAddons: ${{ parameters.enabledAddons }}
-
-    # ===== PROCESSAR PIPELINE =====
-    - id: process-pipeline
-      name: ⚙️ Processar Pipeline
-      action: fetch:template
-      input:
-        url: ./skeleton/pipeline
-        targetPath: ./.github/workflows
-        values:
           projectName: ${{ parameters.projectName }}
-          environments: ${{ parameters.environments }}
-          awsRegion: ${{ parameters.awsRegion }}
+          owner: ${{ parameters.owner }}
+          targetRevision: ${{ parameters.targetRevision }}
 
-    # ===== REMOVER TEMPLATES PROCESSADOS =====
-    - id: cleanup-templates
-      name: 🧹 Limpar Templates
-      action: fs:delete
-      input:
-        files:
-          - ./catalog-info.yaml.template
-          - ./terraform/blueprint_addons.tf.template
-          - ./terraform/environments/dev.tfvars.template
-          - ./terraform/environments/stage.tfvars.template
-          - ./terraform/environments/prod.tfvars.template
-          - ./.github/workflows/pipe-tofu.yaml.template
 
     # ===== REMOVER AMBIENTE DEV (SE NÃO SELECIONADO) =====
     - id: cleanup-dev-env

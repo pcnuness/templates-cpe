@@ -2,6 +2,8 @@ terraform {
   backend "s3" {}
 }
 
+https://github.com/${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}/${{ values.projectName }}
+
 /*
 # EXEC LOCAL
 terraform {
