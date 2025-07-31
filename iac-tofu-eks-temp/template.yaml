@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: opentofu-eks-autopilot-6
-  title: OpenTofu EKS Cluster com Pipeline Autopilot -6
+  name: opentofu-eks-autopilot-7
+  title: OpenTofu EKS Cluster com Pipeline Autopilot -7
   description: |
     Template para criação de clusters EKS usando OpenTofu com pipeline autopilot.
     Suporta múltiplos ambientes (dev, stage, prod) com tfvars específicos.
@@ -272,14 +272,14 @@ spec:
         content: |
           ## ✅ Repositório Criado:
           
-          **Repositório:** ${{ steps['publish-repo'].output.remoteUrl }}
+          **Repositório:** https://github.com/${{ values.owner }}/${{ values.projectName }}/actions
           
           ## 📋 Registro no Catálogo:
           
           Se o registro automático falhou, você pode registrar manualmente:
           
           1. **Acesse:** [Catalog Import](/catalog-import)
-          2. **Cole a URL:** `${{ steps['publish-repo'].output.remoteUrl }}/blob/main/catalog-info.yaml`
+          2. **Cole a URL:** `https://github.com/${{ values.owner }}/${{ values.projectName }}/actions/blob/main/catalog-info.yaml`
           3. **Clique em:** "Analyze"
           4. **Confirme:** "Import"
           
