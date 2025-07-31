@@ -187,41 +187,66 @@ spec:
               EbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
     # ===== FETCH ARQUIVOS ESTÁTICOS =====
-    - id: fetch-base-structure
-      name: 📁 Buscar Estrutura Base
+    #- id: fetch-base-structure
+    #  name: 📁 Buscar Estrutura Base
+    #  action: fetch:template
+    #  input:
+    #    url: ./skeleton/environments/
+    #    targetPath: ./terraform
+    #    values:
+    #      projectName: ${{ parameters.projectName }}
+    #      owner: ${{ parameters.owner }}
+    #      awsRegion: ${{ parameters.awsRegion }}
+    #      clusterVersion: ${{ parameters.clusterVersion }}
+    #      enabledDev: ${{ parameters.environments.enabledDev }}
+    #      enabledStage: ${{ parameters.environments.enabledStage }}
+    #      enabledProd: ${{ parameters.environments.enabledProd }}
+    #      enabledCoreDns: ${{ parameters.enabledCoreDns }}
+    #      enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
+    #      enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
+    #      enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
+
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-prod
+      name: 🌍 Criar Configurações por Ambiente
       action: fetch:template
+      if: ${{ parameters.environments.enabledProd }}
       input:
-        url: ./templates/terraform/
-        targetPath: ./terraform
+        url: ./skeleton/environments/prod.tfvars
+        targetPath: ./terraform/environments/prod.tfvars
         values:
           projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
-          # Ambientes
-          enabledDev: ${{ parameters.environments.enabledDev }}
-          enabledStage: ${{ parameters.environments.enabledStage }}
           enabledProd: ${{ parameters.environments.enabledProd }}
-          # Addons
-          enabledCoreDns: ${{ parameters.enabledCoreDns }}
-          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
-          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
-          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
+
+    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
+    - id: create-environment-stage
+      name: 🌍 Criar Configurações por Ambiente
+      action: fetch:template
+      if: ${{ parameters.environments.enabledStage }}
+      input:
+        url: ./skeleton/environments/stage.tfvars
+        targetPath: ./terraform/environments/stage.tfvars
+        values:
+          projectName: ${{ parameters.projectName }}
+          awsRegion: ${{ parameters.awsRegion }}
+          clusterVersion: ${{ parameters.clusterVersion }}
+          enabledStage: ${{ parameters.environments.enabledStage }}
 
     # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
     - id: create-environment-configs
       name: 🌍 Criar Configurações por Ambiente
       action: fetch:template
+      if: ${{ parameters.environments.enabledDev }}
       input:
-        url: ./templates/environments/
-        targetPath: ./terraform/environments
+        url: ./skeleton/environments/dev.tfvars
+        targetPath: ./terraform/environments/dev.tfvars
         values:
           projectName: ${{ parameters.projectName }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
           enabledDev: ${{ parameters.environments.enabledDev }}
-          enabledStage: ${{ parameters.environments.enabledStage }}
-          enabledProd: ${{ parameters.environments.enabledProd }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
