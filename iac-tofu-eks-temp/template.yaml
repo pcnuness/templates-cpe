@@ -100,32 +100,26 @@ spec:
     # ===== ADDONS E COMPONENTES =====
     - title: 🔧 Addons e Componentes
       properties:
-        enabledAddons:
-          title: Addons Habilitados
-          type: array
-          description: Selecione os addons que serão instalados no cluster
-          uniqueItems: true
-          ui:widget: checkboxes
-          items:
-            type: string
-            enum:
-              - aws-ebs-csi-driver
-              - coredns
-              - kube-proxy
-              - eks-pod-identity-agent
-              - adot
-              - argocd
-          enumNames:
-            - AWS EBS CSI Driver
-            - CoreDNS
-            - Kube Proxy
-            - EKS Pod Identity Agent
-            - AWS Distro for OpenTelemetry
-            - ArgoCD
-          default:
-            - aws-ebs-csi-driver
-            - coredns
-            - kube-proxy
+        enabledCoreDns:
+          title: Addon Core DNS
+          type: boolean
+          description: Habilitar Core DNS
+          default: true
+        enabledKubeProxy:
+          title: Addon Kube Proxy
+          type: boolean
+          description: Habilitar Kube Proxy
+          default: false
+        enabledPodIdentityAgent:
+          title: Addon AWS Pod Identity Agent
+          type: boolean
+          description: Habilitar Pod Identity Agent
+          default: false
+        enabledEbsCsiDriver:
+          title: Addon AWS EBS CSI Driver
+          type: boolean
+          description: Habilitar WS EBS CSI Driver
+          default: false
 
     # ===== CONFIGURAÇÕES DE GOVERNANÇA =====
     - title: 📋 Configurações de Governança

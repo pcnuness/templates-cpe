@@ -8,7 +8,7 @@ module "eks_addons" {
   oidc_provider_arn = local.oidc_provider_arn
 
   eks_addons = {
-{% if 'coredns' in values.enabledAddons %}
+{% if parameters.enabledCoreDns %}
     # ==================================================================
     # FOUNDATION NETWORKING - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
@@ -17,13 +17,13 @@ module "eks_addons" {
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/coredns.yaml")))
     }
 {% endif %}
-{% if 'kube-proxy' in values.enabledAddons %}
+{% if parameters.enabledKubeProxy %}
     kube-proxy = {
       addon_version        = local.aws_eks.cluster_addon_versions.kube_proxy
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/kube-proxy.yaml")))
     }
 {% endif %}
-{% if 'eks-pod-identity-agent' in values.enabledAddons %}
+{% if parameters.enabledPodIdentityAgent %}
     # ==================================================================
     # FOUNDATION SECURITY - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
@@ -32,7 +32,7 @@ module "eks_addons" {
       configuration_values = jsonencode(yamldecode(file("${path.root}/values/eks-pod-identity-agent.yaml")))
     }
 {% endif %}
-{% if 'aws-ebs-csi-driver' in values.enabledAddons %}
+{% if parameters.enabledEbsCsiDriver %}
     # ==================================================================
     # FOUNDATION STORAGE - AWS ADDONS NEEDED FOR EKS OPERATIONS
     # ==================================================================
