@@ -156,17 +156,6 @@ spec:
         values:
           projectName: ${{ parameters.projectName }}
           owner: ${{ parameters.owner }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
-          # Ambientes
-          enabledDev: ${{ parameters.environments.enabledDev }}
-          enabledStage: ${{ parameters.environments.enabledStage }}
-          enabledProd: ${{ parameters.environments.enabledProd }}
-          # Addons
-          enabledCoreDns: ${{ parameters.enabledCoreDns }}
-          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
-          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
-          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
     # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
     - id: create-environment-prod
