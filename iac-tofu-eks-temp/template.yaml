@@ -253,9 +253,8 @@ spec:
       name: 📦 Criar Repositório
       action: publish:github
       input:
-        repoUrl: github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}
+        repoUrl: "github.com?owner=${{ parameters.owner }}&repo=${{ parameters.projectName }}"
         description: 'Infraestrutura EKS para ${{ parameters.projectName }} usando OpenTofu'
-        homepage: https://github.com/${{ values.owner }}/${{ values.projectName }}
         topics:
           - opentofu
           - terraform
