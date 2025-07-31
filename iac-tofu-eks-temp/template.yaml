@@ -16,13 +16,6 @@ metadata:
     - argocd
     - infrastructure
     - autopilot
-  links:
-    - url: https://opentofu.org/docs/
-      title: OpenTofu Documentation
-      icon: docs
-    - url: https://aws.amazon.com/eks/
-      title: Amazon EKS
-      icon: cloud
 
 spec:
   owner: platform-team
@@ -131,39 +124,6 @@ spec:
           description: Habilitar AWS EBS CSI Driver
           default: false
 
-    # ===== CONFIGURAÇÕES DE GOVERNANÇA =====
-    - title: 📋 Configurações de Governança
-      properties:
-        priority:
-          title: Prioridade da Solicitação
-          type: string
-          description: Prioridade para aprovação e processamento
-          default: medium
-          enum:
-            - low
-            - medium
-            - high
-            - critical
-          enumNames:
-            - 'Baixa - Desenvolvimento/Teste'
-            - 'Média - Staging/QA'
-            - 'Alta - Produção'
-            - 'Crítica - Emergência'
-
-        reviewers:
-          title: Revisores Adicionais
-          type: array
-          description: Usuários GitHub para revisar o PR (além dos padrão)
-          items:
-            type: string
-          ui:help: 'Usernames do GitHub, um por linha'
-
-        createDraft:
-          title: Criar como Draft
-          type: boolean
-          description: Criar PR como draft para revisão antes da aprovação
-          default: false
-
   steps:
     # ===== VALIDAÇÃO INICIAL =====
     - id: validate-inputs
@@ -186,67 +146,27 @@ spec:
               PodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
               EbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
-    # ===== FETCH ARQUIVOS ESTÁTICOS =====
-    #- id: fetch-base-structure
-    #  name: 📁 Buscar Estrutura Base
-    #  action: fetch:template
-    #  input:
-    #    url: ./skeleton/environments/
-    #    targetPath: ./terraform
-    #    values:
-    #      projectName: ${{ parameters.projectName }}
-    #      owner: ${{ parameters.owner }}
-    #      awsRegion: ${{ parameters.awsRegion }}
-    #      clusterVersion: ${{ parameters.clusterVersion }}
-    #      enabledDev: ${{ parameters.environments.enabledDev }}
-    #      enabledStage: ${{ parameters.environments.enabledStage }}
-    #      enabledProd: ${{ parameters.environments.enabledProd }}
-    #      enabledCoreDns: ${{ parameters.enabledCoreDns }}
-    #      enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
-    #      enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
-    #      enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
-
-    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
-    - id: create-environment-prod
-      name: 🌍 Criar Configurações por Ambiente
+    # ===== CRIAR ESTRUTURA BASE =====
+    - id: fetch-base-structure
+      name: 📁 Criar Estrutura Base do Projeto
       action: fetch:template
-      if: ${{ parameters.environments.enabledProd }}
       input:
-        url: ./skeleton/environments/prod.tfvars
-        targetPath: ./terraform/environments/prod.tfvars
+        url: ./skeleton/
+        targetPath: ./
         values:
           projectName: ${{ parameters.projectName }}
+          owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
-          enabledProd: ${{ parameters.environments.enabledProd }}
-
-    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
-    - id: create-environment-stage
-      name: 🌍 Criar Configurações por Ambiente
-      action: fetch:template
-      if: ${{ parameters.environments.enabledStage }}
-      input:
-        url: ./skeleton/environments/stage.tfvars
-        targetPath: ./terraform/environments/stage.tfvars
-        values:
-          projectName: ${{ parameters.projectName }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
-          enabledStage: ${{ parameters.environments.enabledStage }}
-
-    # ===== CRIAR CONFIGURAÇÕES POR AMBIENTE =====
-    - id: create-environment-configs
-      name: 🌍 Criar Configurações por Ambiente
-      action: fetch:template
-      if: ${{ parameters.environments.enabledDev }}
-      input:
-        url: ./skeleton/environments/dev.tfvars
-        targetPath: ./terraform/environments/dev.tfvars
-        values:
-          projectName: ${{ parameters.projectName }}
-          awsRegion: ${{ parameters.awsRegion }}
-          clusterVersion: ${{ parameters.clusterVersion }}
+          # Ambientes
           enabledDev: ${{ parameters.environments.enabledDev }}
+          enabledStage: ${{ parameters.environments.enabledStage }}
+          enabledProd: ${{ parameters.environments.enabledProd }}
+          # Addons
+          enabledCoreDns: ${{ parameters.enabledCoreDns }}
+          enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
+          enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
+          enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
@@ -278,18 +198,7 @@ spec:
           
           Criado via Backstage Scaffolder
 
-    # ===== AGUARDAR PROPAGAÇÃO =====
-    - id: wait-for-repo
-      name: ⏳ Aguardar Propagação do Repositório
-      action: debug:log
-      input:
-        message: |
-          ⏳ Aguardando propagação do repositório no GitHub...
-          Repositório: https://github.com/${{ values.owner }}/${{ values.projectName }}.git
-          
-          Aguardando 10 segundos para garantir que os arquivos estejam disponíveis via API...
-
-    # ===== REGISTRAR NO CATÁLOGO (COM RETRY) =====
+    # ===== REGISTRAR NO CATÁLOGO =====
     - id: register-catalog
       name: 📋 Registrar no Catálogo
       action: catalog:register
@@ -301,59 +210,19 @@ spec:
   output:
     links:
       - title: 📦 Ver Repositório
-        url: https://github.com/${{ values.owner }}/${{ values.projectName }}
+        url: ${{ steps['publish-repo'].output.remoteUrl }}
         icon: github
 
       - title: 📊 Pipeline Status
-        url: https://github.com/${{ values.owner }}/${{ values.projectName }}/actions
+        url: ${{ steps['publish-repo'].output.remoteUrl }}/actions
         icon: github
-
-      - title: 📋 Registrar Manualmente no Catálogo
-        url: /catalog-import
-        icon: catalog
-
-      - title: 📖 OpenTofu Documentation
-        url: https://opentofu.org/docs/
-        icon: docs
-
-      - title: ☁️ AWS EKS Console
-        url: https://console.aws.amazon.com/eks/home?region=${{ parameters.awsRegion }}#/clusters
-        icon: cloud
 
     text:
       - title: 🎉 Infraestrutura OpenTofu Criada com Sucesso!
         content: |
           ## ✅ Repositório Criado:
           
-          **Repositório:** https://github.com/${{ values.owner }}/${{ values.projectName }}
-          
-          ## 📋 Registro no Catálogo:
-          
-          Se o registro automático falhou, você pode registrar manualmente:
-          
-          1. **Acesse:** [Catalog Import](/catalog-import)
-          2. **Cole a URL:** `https://github.com/${{ values.owner }}/${{ values.projectName }}/blob/main/catalog-info.yaml`
-          3. **Clique em:** "Analyze"
-          4. **Confirme:** "Import"
-          
-          ## 🚀 Próximos Passos:
-          
-          ### 1. 📦 Verificar Repositório
-          - Acesse o repositório criado no GitHub
-          - Verifique se todos os arquivos estão corretos
-          
-          ### 2. 🚀 Executar Pipeline
-          - Vá para a aba Actions do repositório
-          - Execute a pipeline manualmente para o ambiente desejado:
-            ```bash
-            # Exemplo para ambiente dev
-            gh workflow run "Deploy OpenTofu EKS" --field stage=dev --field action=plan
-            ```
-          
-          ### 3. 🔧 Configurações Pós-Deploy
-          - Configure kubectl: `aws eks update-kubeconfig --region ${{ parameters.awsRegion }} --name ${{ parameters.projectName }}-eks`
-          - Valide conectividade com o cluster
-          - Configure aplicações no ArgoCD (se habilitado)
+          **Repositório:** ${{ steps['publish-repo'].output.remoteUrl }}
           
           ## 📊 Resumo da Configuração:
           - **Projeto:** ${{ parameters.projectName }}
@@ -368,6 +237,3 @@ spec:
             - Kube-Proxy: ${{ parameters.enabledKubeProxy }}
             - Pod Identity Agent: ${{ parameters.enabledPodIdentityAgent }}
             - EBS CSI Driver: ${{ parameters.enabledEbsCsiDriver }}
-          
-          ## 🆘 Suporte:
-          Em caso de dúvidas ou problemas, consulte a documentação ou entre em contato com a equipe de platform.
