@@ -187,37 +187,37 @@ spec:
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
  
-- id: generate-tfvars
-  name: Gerar arquivos tfvars por ambiente
-  action: create:files
-  input:
-    files:
-      {% for env in parameters.environments %}
-      - path: terraform/environments/{{ env }}.tfvars
-        content: |
-          # ==================================================================
-          # CONFIGURAÇÕES AMBIENTE DEV - ${{ values.projectName }}
-          # ==================================================================
-          
-          # Configurações Básicas
-          name        = "${{ values.projectName }}-dev"
-          eks_name    = "${{ values.projectName }}-dev-eks"
-          eks_version = "${{ values.clusterVersion }}"
-          region      = "${{ values.awsRegion }}"
-          
-          # Configurações de Rede
-          vpc_cidr = "10.0.0.0/16"
-          
-          # Tags do Ambiente
-          tags = {
-            Environment = "dev"
-            Project     = "${{ values.projectName }}"
-            ManagedBy   = "backstage-opentofu"
-            Owner       = "${{ values.owner }}"
-            Repository  = "${{ values.repoName }}"
-            CreatedAt   = "${{ '' | now }}"
-          }
-      {% endfor %}
+    - id: generate-tfvars
+      name: Gerar arquivos tfvars por ambiente
+      action: create:files
+      input:
+        files:
+          {% for env in parameters.environments %}
+          - path: terraform/environments/{{ env }}.tfvars
+            content: |
+              # ==================================================================
+              # CONFIGURAÇÕES AMBIENTE DEV - ${{ values.projectName }}
+              # ==================================================================
+              
+              # Configurações Básicas
+              name        = "${{ values.projectName }}-dev"
+              eks_name    = "${{ values.projectName }}-dev-eks"
+              eks_version = "${{ values.clusterVersion }}"
+              region      = "${{ values.awsRegion }}"
+              
+              # Configurações de Rede
+              vpc_cidr = "10.0.0.0/16"
+              
+              # Tags do Ambiente
+              tags = {
+                Environment = "dev"
+                Project     = "${{ values.projectName }}"
+                ManagedBy   = "backstage-opentofu"
+                Owner       = "${{ values.owner }}"
+                Repository  = "${{ values.repoName }}"
+                CreatedAt   = "${{ '' | now }}"
+              }
+          {% endfor %}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
