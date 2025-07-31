@@ -1,4 +1,3 @@
-{#- Template para configuração de addons EKS -#}
 module "eks_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
   version = "~> 1.21"
