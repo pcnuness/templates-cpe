@@ -187,8 +187,8 @@ spec:
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
           enabledProd: ${{ parameters.enabledProd }}
-          enabledProd: ${{ parameters.enabledStage }}
-          enabledProd: ${{ parameters.enabledDev }}
+          enabledStage: ${{ parameters.enabledStage }}
+          enabledDev: ${{ parameters.enabledDev }}
           enabledCoreDns: ${{ parameters.enabledCoreDns }}
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
