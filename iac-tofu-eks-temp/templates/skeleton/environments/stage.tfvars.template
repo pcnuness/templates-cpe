@@ -1,0 +1,24 @@
+# ==================================================================
+# CONFIGURAÇÕES AMBIENTE STAGE - ${{ values.projectName }}
+# ==================================================================
+
+# Configurações Básicas
+name        = "${{ values.projectName }}-stage"
+eks_name    = "${{ values.projectName }}-stage-eks"
+eks_version = "${{ values.clusterVersion }}"
+region      = "${{ values.awsRegion }}"
+
+# Configurações de Rede
+vpc_cidr = "10.1.0.0/16"
+
+# Tags do Ambiente
+tags = {
+  Environment = "stage"
+  Project     = "${{ values.projectName }}"
+  ManagedBy   = "backstage-opentofu"
+  Owner       = "${{ values.owner }}"
+  Repository  = "${{ values.repoName }}"
+  CreatedAt   = "${{ '' | now }}"
+}
+
+https://github.com/${{ values.owner }}/${{ values.projectName }}

@@ -1,1 +1,0 @@
-https://github.com/${{ values.owner }}/${{ values.projectName }}

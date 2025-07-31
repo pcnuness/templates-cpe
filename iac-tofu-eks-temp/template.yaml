@@ -186,12 +186,10 @@ spec:
           owner: ${{ parameters.owner }}
           awsRegion: ${{ parameters.awsRegion }}
           clusterVersion: ${{ parameters.clusterVersion }}
-          # Addons habilitados
           enabledCoreDns: ${{ parameters.enabledCoreDns }}
           enabledKubeProxy: ${{ parameters.enabledKubeProxy }}
           enabledPodIdentityAgent: ${{ parameters.enabledPodIdentityAgent }}
           enabledEbsCsiDriver: ${{ parameters.enabledEbsCsiDriver }}
-          # Ambientes selecionados
           environments: ${{ parameters.environments }}
 
     # ===== CRIAR REPOSITÓRIO =====
