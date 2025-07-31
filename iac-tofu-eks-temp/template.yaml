@@ -183,40 +183,11 @@ spec:
       name: Buscar Estrutura Base
       action: fetch:template
       input:
-        url: ./templates/terraform
-        targetPath: ./terraform
+        url: ./templates/terraform/
+        targetPath: ./
         values:
           projectName: ${{ parameters.projectName }}
-          owner: ${{ parameters.owner }}
-          targetRevision: ${{ parameters.targetRevision }}
-
-
-    # ===== REMOVER AMBIENTE DEV (SE NÃO SELECIONADO) =====
-    - id: cleanup-dev-env
-      name: 🗑️ Remover Ambiente Dev (se não selecionado)
-      if: ${{ 'dev' not in parameters.environments }}
-      action: fs:delete
-      input:
-        files:
-          - ./terraform/environments/dev.tfvars
-
-    # ===== REMOVER AMBIENTE STAGE (SE NÃO SELECIONADO) =====
-    - id: cleanup-stage-env
-      name: 🗑️ Remover Ambiente Stage (se não selecionado)
-      if: ${{ 'stage' not in parameters.environments }}
-      action: fs:delete
-      input:
-        files:
-          - ./terraform/environments/stage.tfvars
-
-    # ===== REMOVER AMBIENTE PROD (SE NÃO SELECIONADO) =====
-    - id: cleanup-prod-env
-      name: 🗑️ Remover Ambiente Prod (se não selecionado)
-      if: ${{ 'prod' not in parameters.environments }}
-      action: fs:delete
-      input:
-        files:
-          - ./terraform/environments/prod.tfvars
+          owner: ${{ parameters.repoUrl | parseRepoUrl | pick('owner') }}
 
     # ===== CRIAR REPOSITÓRIO =====
     - id: publish-repo
