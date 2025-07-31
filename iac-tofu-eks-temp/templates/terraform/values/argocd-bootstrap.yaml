@@ -1,5 +1,5 @@
 # values/argocd-bootstrap.yaml
-
+---
 global:
   priorityClassName: system-cluster-critical
   nodeSelector:
