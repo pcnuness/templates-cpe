@@ -1,2 +1,1 @@
-https://github.com//${{ values.projectName }}
-
+https://github.com/${{ values.owner }}/${{ values.projectName }}

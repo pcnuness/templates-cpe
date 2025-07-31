@@ -36,6 +36,7 @@ spec:
         - owner
         - awsRegion
         - environments
+        - clusterVersion
       properties:
         projectName:
           title: Nome do Repositório
@@ -174,7 +175,7 @@ spec:
       action: fetch:template
       input:
         url: ./templates/terraform/
-        targetPath: ./
+        targetPath: ./terraform
         values:
           projectName: ${{ parameters.projectName }} https://github.com/${{ values.owner }}/${{ values.projectName }}.git
           owner: ${{ parameters.owner }}
